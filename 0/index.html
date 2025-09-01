@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 0: Becoming Friends with Your Camera</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <header>
+    <h1>Project 0: Becoming Friends with Your Camera</h1>
+    <nav><a href="../index.html">← Back to Portfolio</a></nav>
+  </header>
+
+  <main>
+    <!-- ===== Part 1 ===== -->
+    <section class="part">
+      <h2>Part 1: Selfie — The Wrong Way vs. The Right Way</h2>
+      <p>
+        Take a close-up selfie (wide angle, near the face). Then step back several feet,
+        zoom in, and frame the face to the same size. The second portrait should look
+        more flattering (less perspective distortion).
+      </p>
+
+      <div class="figure-grid">
+        <figure>
+          <img src="assets/part1_close.jpg" alt="Close portrait (wide, up close)">
+          <figcaption>Close-up (wide, up close) — noticeable distortion</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/part1_far.jpg" alt="Stepped back, zoomed in">
+          <figcaption>Stepped back + zoomed — flatter perspective</figcaption>
+        </figure>
+      </div>
+
+      <details class="notes">
+        <summary>Why this happens</summary>
+        <p>
+          Perspective distortion depends on <em>camera-to-subject distance</em>, not focal length.
+          Stepping back reduces relative size differences (nose vs. ears), then zooming restores framing.
+        </p>
+      </details>
+    </section>
+
+    <!-- ===== Part 2 ===== -->
+    <section class="part">
+      <h2>Part 2: Architectural Perspective Compression</h2>
+      <p>
+        First, from far away, zoom in down a long street/walkway and take a photo. Then walk forward,
+        use little/no zoom, and match the framing. The zoomed, far shot should look “flatter” (compressed).
+      </p>
+
+      <div class="figure-grid">
+        <figure>
+          <img src="assets/part2_zoomed.jpg" alt="Urban scene zoomed from far">
+          <figcaption>Zoomed from far — compressed look</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/part2_wide.jpg" alt="Urban scene wide from near">
+          <figcaption>Wide from near — deeper perspective</figcaption>
+        </figure>
+      </div>
+
+      <details class="notes">
+        <summary>Why it looks compressed</summary>
+        <p>
+          From farther away, sight lines to near and far objects become more parallel, reducing depth cues.
+          Zoom just crops the field of view; the distance change alters perspective.
+        </p>
+      </details>
+    </section>
+
+    <!-- ===== Part 3 ===== -->
+    <section class="part">
+      <h2>Part 3: The Dolly Zoom (a.k.a. “Vertigo shot”)</h2>
+      <p>
+        Move the camera backward while zooming in (or forward while zooming out) to keep the subject’s
+        size roughly constant while the background “warps.” Capture 4–8 stills and combine them into a GIF.
+      </p>
+
+      <ol class="steps">
+        <li>Pick a scene with depth (hallway, shelves, stuffed animals, etc.).</li>
+        <li>Start close + wide; step back incrementally while increasing focal length to keep subject size similar.</li>
+        <li>Export your frames as an animated GIF.</li>
+      </ol>
+
+      <figure class="media">
+        <img src="assets/part3_dolly.gif" alt="Dolly zoom animated GIF">
+        <figcaption>Dolly zoom result (animated GIF)</figcaption>
+      </figure>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="y"></span> Matthew Gerardi — CS180 Project 0</p>
+  </footer>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

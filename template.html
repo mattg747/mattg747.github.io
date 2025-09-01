@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project X: Title Here</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <header>
+    <h1>Project X: Title Here</h1>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="https://mattg747.vercel.app" target="_blank">Main Site</a>
+      <a href="https://github.com/mattg747" target="_blank">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="part">
+      <h2>Section Title</h2>
+      <p>Write-up text goes here.</p>
+
+      <figure class="media">
+        <img src="assets/example.jpg" alt="Example image">
+        <figcaption>Caption here</figcaption>
+      </figure>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="y"></span> Matthew Gerardi — CS180 Project X</p>
+  </footer>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
