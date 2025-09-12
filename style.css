@@ -79,9 +79,9 @@ footer {
 .part ul,
 .part ol {
   color: #cdd6e5;
-  max-width: 75ch;          /* keep readable line length */
-  margin-left: auto;        /* center horizontally */
-  margin-right: auto;
+  max-width: none;          /* keep readable line length */
+  margin-left: 0;        /* center horizontally */
+  margin-right: 0;
 }
 
 /* Side-by-side figure grid */
