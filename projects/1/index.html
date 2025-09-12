@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 1: Prokudin-Gorskii Colorization</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Project 1: Prokudin-Gorskii Colorization</h1>
+    <nav><a href="/home.html">← Back to Portfolio</a></nav>
+  </header>
+
+  <main>
+
+    <!-- ===== Overview & Approach ===== -->
+    <section class="part" id="overview">
+      <h2>Overview</h2>
+      <p>
+        We reconstruct color photographs from digitized Prokudin-Gorskii glass plates by splitting the
+        scanned plate into three monochrome images (B, G, R from top to bottom), aligning G and R to B,
+        and stacking to form an RGB image. I implemented a single-scale baseline, a coarse-to-fine
+        pyramid for large .tif files, and edge-based scoring to reduce chromatic ghosting. 
+        All outputs shown here are compressed (JPG/PNG); large .tif inputs are not uploaded.
+      </p>
+
+      <h2>Method / Approach</h2>
+      <ul>
+        <li><b>Preprocessing:</b> read, convert to <code>float64</code> in [0,1], split B/G/R, and hard pre-crop to remove thick borders.</li>
+        <li><b>Scoring metric:</b> Zero-mean Normalized Cross-Correlation (ZNCC). For robustness, I also support ZNCC on
+            <em>edge features</em> (Sobel or Gaussian gradient magnitude). I compute scores on an interior crop to avoid wrap/edges.</li>
+        <li><b>Alignment:</b>
+          <ul>
+            <li><b>Single-scale baseline:</b> exhaustive search over a window (e.g., ±15) for small JPGs.</li>
+            <li><b>Image pyramid:</b> downscale by 0.5 to a min side ~250 px; align at the coarsest level, double the shift each level,
+                and refine in a small window (±5–7). Optional larger window at the coarsest level (±8–10).</li>
+          </ul>
+        </li>
+        <li><b>Post:</b> stack (R,G,B) → RGB, small border trim (2–3%) to hide seams; save as JPG.</li>
+      </ul>
+
+      <details class="notes">
+        <summary>Issues & fixes</summary>
+        <ul>
+          <li><b>Rainbow ghosting on edges:</b> mitigated by aligning on edge features (Sobel / Gaussian grad) and a final ±2 pixel full-res refinement.</li>
+          <li><b>Border bias:</b> fixed with hard pre-crop + interior metric crop + optional center weighting of the score window.</li>
+          <li><b>Large displacements (.tif):</b> handled by the coarse-to-fine pyramid; small fixed window per level keeps runtime low.</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- ===== Results on Provided Images ===== -->
+    <section class="part" id="provided">
+      <h2>Results on Provided Images</h2>
+
+      <!-- Offsets table (fill in your measured shifts) -->
+      <table>
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>G → B shift (dx, dy)</th>
+            <th>R → B shift (dx, dy)</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>cathedral.jpg</td><td>(5, 2)</td><td>(12, 3)</td><td>Single-scale ZNCC</td></tr>
+          <tr><td>monastery.jpg</td><td>(-3, 2)</td><td>(3, 2)</td><td>Single-scale ZNCC</td></tr>
+          <tr><td>tobolsk.jpg</td><td>(3, 3)</td><td>(6, 3)</td><td>Single-scale ZNCC</td></tr>
+          <!-- Add your .tif results (with pyramid) as PNG/JPG outputs -->
+          <tr><td>emir.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>Pyramid + edges</td></tr>
+          <tr><td>... .tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>Pyramid + edges</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Gallery grid of outputs (compressed images only) -->
+      <div class="figure-grid">
+        <figure>
+          <img src="outputs/jpg/cathedral.jpg" alt="cathedral result">
+          <figcaption>cathedral — RGB composite</figcaption>
+        </figure>
+        <figure>
+          <img src="outputs/jpg/monastery.jpg" alt="monastery result">
+          <figcaption>monastery — RGB composite</figcaption>
+        </figure>
+        <figure>
+          <img src="outputs/jpg/tobolsk.jpg" alt="tobolsk result">
+          <figcaption>tobolsk — RGB composite</figcaption>
+        </figure>
+        <!-- Add your .tif results (exported as jpg/png) -->
+        <!-- <figure>...emir.jpg...</figure> -->
+      </div>
+    </section>
+
+    <!-- ===== Your Chosen Images from the Collection ===== -->
+    <section class="part" id="own">
+      <h2>Additional Images (from the Collection)</h2>
+      <p>
+        I selected a few additional glass plates from the LoC collection to test generalization.
+        These are aligned with the same fixed parameters (no per-image tuning).
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>G → B shift</th>
+            <th>R → B shift</th>
+            <th>Method</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>melons.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>Pyramid + edges + precrop</td></tr>
+          <tr><td>self_portrait.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>Pyramid + edges</td></tr>
+        </tbody>
+      </table>
+
+      <div class="figure-grid">
+        <figure>
+          <img src="outputs/extra/melons.jpg" alt="melons result">
+          <figcaption>melons — RGB composite</figcaption>
+        </figure>
+        <figure>
+          <img src="outputs/extra/self_portrait.jpg" alt="self portrait result">
+          <figcaption>self-portrait — RGB composite</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===== Failure / Difficult Cases ===== -->
+    <section class="part" id="failures">
+      <h2>Failure / Difficult Cases</h2>
+      <p>
+        If an image failed or shows residual color fringing, here’s why and what I tried.
+      </p>
+
+      <div class="figure-grid">
+        <!-- Before / After pairs are great here -->
+        <figure>
+          <img src="assets/fail_before_emir.png" alt="emir before (misaligned)">
+          <figcaption>Before — rainbow ghosting along edges</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/fail_after_emir.png" alt="emir after (aligned)">
+          <figcaption>After — edge-based scoring + coarsest larger window</figcaption>
+        </figure>
+      </div>
+
+      <ul>
+        <li><b>Thick borders:</b> required hard pre-crop plus interior metric crop.</li>
+        <li><b>Low-texture regions:</b> alignment ambiguous → edges or gradient-SSD scoring helped.</li>
+        <li><b>Repetitive textures (e.g., melons):</b> small coarsest-level window caused wrong basin; increasing to ±8–10 fixed it.</li>
+      </ul>
+    </section>
+
+    <!-- ===== Bells & Whistles ===== -->
+    <section class="part" id="bells">
+      <h2>Bells &amp; Whistles</h2>
+      <ul>
+        <li><b>Edge-based scoring:</b> ZNCC on Sobel and Gaussian gradient magnitude.</li>
+        <li><b>Hard pre-crop:</b> automatic plate-border trimming.</li>
+        <li><b>Center-weighted ZNCC:</b> Gaussian window to de-emphasize borders.</li>
+        <li><b>Full-res local refine:</b> ±2 pixel refinement after the pyramid.</li>
+      </ul>
+
+      <!-- Show before/after for an image that benefited -->
+      <div class="figure-grid">
+        <figure>
+          <img src="assets/bw_before_melons.png" alt="melons before bells">
+          <figcaption>Before — raw ZNCC (notice chromatic blur)</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/bw_after_melons.png" alt="melons after bells">
+          <figcaption>After — edges + larger coarsest window + refine</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===== Notes / Runtime ===== -->
+    <section class="part" id="notes">
+      <h2>Notes &amp; Runtime</h2>
+      <ul>
+        <li>Parameters are fixed across images (no per-image hand tuning).</li>
+        <li>Typical runtime: &lt; 1 minute per large image with the pyramid (laptop).</li>
+        <li>All outputs here are compressed JPG/PNG for the report.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>© <span id="y"></span> Your Name — CS180 Project 1</p>
+  </footer>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
