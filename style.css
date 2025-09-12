@@ -1,181 +1,235 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-/* === Layout tokens === */
-:root {
-  --section-width: 1100px;   /* overall section container width */
-  --content-width: 75ch;     /* centered column width for headings/text */
+/* =========================
+   Design tokens
+========================= */
+:root{
+  --section-width: 1100px;  /* outer container */
+  --content-width: 75ch;    /* inner text column */
+  --bg: #0f172a;            /* dark navy */
+  --fg: #f8fafc;            /* light text */
+  --muted: #cdd6e5;
+  --border: #243244;
+  --panel: #1e293b;
+  --panel-border: #273346;
+  --link: #9fb4ff;
 }
 
-/* Global */
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: #0f172a; /* dark navy */
-  color: #f8fafc;      /* light text */
-  line-height: 1.5;
+/* =========================
+   Base / reset
+========================= */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--fg);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
 }
-a { color: inherit; }
+a{ color:inherit; text-decoration:none; }
+a:hover{ text-decoration:underline; }
 
-/* Shared header/footer */
-header {
-  text-align: center;
-  padding: 1.5rem 1rem;
-  border-bottom: 1px solid #243244;
-}
-header h1 {
-  margin: 0;
-  font-size: clamp(26px, 4vw, 34px);
-}
-header nav { margin-top: .5rem; }
-header nav a {
-  color: #9fb4ff;
-  text-decoration: none;
-  margin: 0 .75rem;
-  font-weight: 600;
-}
-header nav a:hover { color: #ffffff; }
+/* A consistent vertical rhythm */
+:where(h1,h2,h3,h4,p,ul,ol,pre,blockquote,table,figure){ margin:0 0 .9rem; }
+:where(ul,ol){ padding-left:1.25rem; }
 
-footer {
-  border-top: 1px solid #243244;
-  padding: 1.25rem 1rem;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 0.9rem;
+/* =========================
+   Page chrome
+========================= */
+header{
+  text-align:center;
+  padding:1.5rem 1rem;
+  border-bottom:1px solid var(--border);
 }
+header h1{
+  margin:0;
+  font-size:clamp(26px,4vw,34px);
+  line-height:1.2;
+}
+header nav{ margin-top:.5rem; }
+header nav a{
+  color:var(--link);
+  margin:0 .75rem;
+  font-weight:600;
+}
+header nav a:hover{ color:#fff; text-decoration:none; }
 
-/* Landing page cards */
-.projects {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  padding: 2rem;
-  max-width: var(--section-width);
-  margin: 0 auto;
-}
-.card {
-  display: block;
-  background: #1e293b;
-  padding: 1rem 1.25rem;
-  border-radius: 12px;
-  color: inherit;
-  text-decoration: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  transition: transform 0.1s ease, box-shadow .2s ease;
-}
-.card:hover { transform: translateY(-4px); }
-.card:focus-visible {
-  outline: 2px solid #9fb4ff;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 6px rgba(127, 157, 255, 0.25);
+footer{
+  border-top:1px solid var(--border);
+  padding:1.25rem 1rem;
+  text-align:center;
+  color:#94a3b8;
+  font-size:.9rem;
 }
 
-/* Project page sections */
-.part {
-  padding: 2rem 1rem;
-  border-top: 1px solid #243244;
-  max-width: var(--section-width);  /* center the whole section */
-  margin: 0 auto;
+/* =========================
+   Layout primitives
+========================= */
+/* Outer section centers the whole block and gives padding */
+.section{
+  border-top:1px solid var(--border);
+  padding:2rem 1rem;
+}
+.container{               /* centers to section width */
+  max-width:var(--section-width);
+  margin:0 auto;
 }
 
-/* HEADERS + TEXT share the SAME centered column */
-.part :is(h2, h3, p, ul, ol, table) {
-  max-width: var(--content-width);
-  margin-left: auto;
-  margin-right: auto;
+/* The magic: .prose is the shared text column for ALL copy + headings */
+.prose{
+  max-width:var(--content-width);
+  margin:0 auto;
 }
 
-.part h2 {
-  margin: 0 0 .5rem;
-  font-size: clamp(22px, 3vw, 28px);
+/* Ensure headings + paragraphs are locked to the same column */
+.prose :where(h2,h3,h4,p,ul,ol,pre,blockquote,table){ max-width:100%; }
+
+/* Headings */
+.prose h2{
+  font-size:clamp(22px,3vw,28px);
+  margin:.2rem 0 .5rem;
+  line-height:1.25;
 }
-.part h3 {
-  margin: 1rem auto .4rem;
-  font-size: clamp(18px, 2.5vw, 22px);
+.prose h3{
+  font-size:clamp(18px,2.5vw,22px);
+  margin:1rem 0 .4rem;
+  line-height:1.3;
 }
 
-/* Text blocks */
-.part p,
-.part ul,
-.part ol {
-  color: #cdd6e5;
+/* Body text */
+.prose :where(p,ul,ol,li,blockquote){ color:var(--muted); }
+
+/* =========================
+   Utilities
+========================= */
+/* Full-bleed block that ignores the narrow text column */
+.full-bleed{
+  margin-left:calc(50% - min(50%, var(--section-width)/2));
+  margin-right:calc(50% - min(50%, var(--section-width)/2));
 }
-.part ul,
-.part ol {
-  padding-left: 1.25rem;  /* keep bullets nicely indented within the column */
+.full-bleed > *{
+  max-width:var(--section-width);
+  margin-left:auto;
+  margin-right:auto;
 }
 
-/* Tables (results) */
-.part table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #0f172a;
-  border: 1px solid #243244;
-  border-radius: 10px;
-  overflow: hidden;
+/* Optional tighter spacing lists */
+.list-tight li{ margin:.3rem 0; }
+
+/* =========================
+   Cards grid (landing page)
+========================= */
+.projects{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;
+  padding:2rem 1rem;
+  max-width:var(--section-width);
+  margin:0 auto;
 }
-.part thead th {
-  text-align: left;
-  background: #111c2b;
-  color: #e5e7eb;
-  font-weight: 600;
-  padding: .6rem .75rem;
+.card{
+  display:block;
+  background:var(--panel);
+  padding:1rem 1.25rem;
+  border-radius:12px;
+  color:inherit;
+  text-decoration:none;
+  border:1px solid var(--panel-border);
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+  transition:transform .12s ease, box-shadow .2s ease;
 }
-.part tbody td {
-  padding: .55rem .75rem;
-  border-top: 1px solid #243244;
-  color: #d6dee9;
-}
-.part tbody tr:nth-child(even) td {
-  background: #121b2b;
+.card:hover{ transform:translateY(-4px); }
+.card:focus-visible{
+  outline:2px solid var(--link);
+  outline-offset:2px;
+  box-shadow:0 0 0 6px rgba(127,157,255,.25);
 }
 
-/* Side-by-side figure grid (keeps full section width) */
-.figure-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  margin: 1rem 0 0;
+/* =========================
+   Tables (scroll-safe)
+========================= */
+.table-wrap{              /* keeps tables aligned with text and scrollable on small screens */
+  max-width:var(--content-width);
+  margin:0 auto .9rem;
+  overflow:auto;          /* horizontal scroll if needed */
 }
-@media (min-width: 700px) {
-  .figure-grid { grid-template-columns: repeat(2, 1fr); }
+.prose table{
+  width:100%;
+  border-collapse:collapse;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+  min-width:640px;        /* prevents cramped layouts; remove if not needed */
 }
-figure {
-  margin: 0;
-  background: #1e293b;
-  border: 1px solid #273346;
-  border-radius: 12px;
-  overflow: hidden;
+.prose thead th{
+  text-align:left;
+  background:#111c2b;
+  color:#e5e7eb;
+  font-weight:600;
+  padding:.6rem .75rem;
+  position:sticky;
+  top:0;
 }
-figure img { display: block; width: 100%; height: auto; }
-figcaption {
-  padding: .6rem .8rem;
-  font-size: .9rem;
-  color: #cfd6e6;
-  text-align: center;
+.prose tbody td{
+  padding:.55rem .75rem;
+  border-top:1px solid var(--border);
+  color:#d6dee9;
+}
+.prose tbody tr:nth-child(even) td{ background:#121b2b; }
+
+/* =========================
+   Figures / media
+========================= */
+.figure-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1rem;
+}
+@media (min-width:700px){
+  .figure-grid{ grid-template-columns:repeat(2,1fr); }
+}
+figure{
+  margin:0;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:12px;
+  overflow:hidden;
+}
+figure img{ display:block; width:100%; height:auto; }
+figcaption{
+  padding:.6rem .8rem;
+  font-size:.9rem;
+  color:#cfd6e6;
+  text-align:center;
 }
 
-/* Notes/steps/media */
-.notes { margin-top: .75rem; }
-.notes summary { cursor: pointer; color: #9fb4ff; }
-.notes p { margin: .6rem 0 0; }
+/* Centered media within prose */
+.media{
+  text-align:center;
+  background:transparent;
+  border:none;
+}
+.media img{
+  max-width:800px;
+  width:100%;
+  border-radius:12px;
+}
+.media figcaption{
+  color:#cfd6e6;
+  margin-top:.5rem;
+  font-size:.9rem;
+}
 
-.steps { margin: .75rem 0 0 1rem; color: #cdd6e5; }
-.steps li { margin: .3rem 0; }
+/* =========================
+   Details / notes / steps
+========================= */
+.notes{ margin-top:.75rem; }
+.notes summary{ cursor:pointer; color:var(--link); }
+.notes p{ margin:.6rem 0 0; }
 
-.media {
-  margin: 1rem 0 0;
-  text-align: center;
-  background: transparent;
-  border: none;
-}
-.media img {
-  max-width: 800px;
-  width: 100%;
-  border-radius: 12px;
-}
-.media figcaption {
-  color: #cfd6e6;
-  margin-top: .5rem;
-  font-size: .9rem;
-}
+.steps{ margin:.75rem 0 0 1rem; color:var(--muted); }
+.steps li{ margin:.3rem 0; }

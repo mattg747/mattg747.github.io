@@ -15,230 +15,269 @@
   <main>
 
     <!-- ===== Overview & Approach ===== -->
-    <section class="part" id="overview">
-      <h2>Overview</h2>
-      <p>
-        In this project, I used digitized glass plates — taken by Prokudin-Gorskii in the early 1900s by using red, green, and blue filters for a total of three exposures for each photograph — to reconstruct color images through careful alignment of the three color channels. First, I split the glass plate scan into three sections to separate each color filter exposure. To align the images, the code searches over a small window (for my implementation, 15 pixels wide/tall) and evaluates how well the color channels match with Normalized Cross-Correlation. This kind of exhaustive search works well enough for .jpg files, but larger .tif files required a more efficient, image pyramid method (going from small, scaled-down, coarse/blurry images to the full-resolution starting image and shifting the alignment at each level) in order to run in a reasonable amount of time. Then, to improve accuracy even further, I implemented edge detection and used that as the feature space for scoring via NCC rather than simply RGB values.
-      </p>
-
-      <h2>Method / Approach</h2>
-      <ol>
-        <li>
-          <b>Single-scale baseline:</b>
+    <section class="section" id="overview">
+      <div class="container">
+        <div class="prose">
+          <h2>Overview</h2>
           <p>
-            For small JPGs, I implemented an exhaustive integer search within a fixed
-            window (e.g., ±15 pixels) using Zero-mean Normalized Cross-Correlation
-            (ZNCC). This works well enough for low-resolution images but is too slow
-            and limited for larger .tif files.
+            In this project, I used digitized glass plates — taken by Prokudin-Gorskii in the early 1900s by using red, green, and blue filters for a total of three exposures for each photograph — to reconstruct color images through careful alignment of the three color channels. First, I split the glass plate scan into three sections to separate each color filter exposure. To align the images, the code searches over a small window (for my implementation, 15 pixels wide/tall) and evaluates how well the color channels match with Normalized Cross-Correlation. This kind of exhaustive search works well enough for .jpg files, but larger .tif files required a more efficient, image pyramid method (going from small, scaled-down, coarse/blurry images to the full-resolution starting image and shifting the alignment at each level) in order to run in a reasonable amount of time. Then, to improve accuracy even further, I implemented edge detection and used that as the feature space for scoring via NCC rather than simply RGB values.
           </p>
-        </li>
 
-        <li>
-          <b>Image preprocessing & cropping:</b>
-          <p>
-            Each plate is read, converted to <code>float64</code> in [0,1], and split
-            into B, G, and R channels. I applied a <em>hard pre-crop</em> (to remove
-            thick borders), ensuring the wraparound edges and black borders
-            don’t bias the metrics. Then, I also applied an interior crop when scoring
-            with ZNCC to avoid wraparound artifacts caused by np.roll (and to utilize the
-            center of the image, which is most reliable due to vignetting, chromatic aberration, etc.)
-          </p>
-        </li>
+          <h2>Method / Approach</h2>
+          <ol>
+            <li>
+              <b>Single-scale baseline:</b>
+              <p>
+                For small JPGs, I implemented an exhaustive integer search within a fixed
+                window (e.g., ±15 pixels) using Zero-mean Normalized Cross-Correlation
+                (ZNCC). This works well enough for low-resolution images but is too slow
+                and limited for larger .tif files.
+              </p>
+            </li>
 
-        <li>
-          <b>Pyramid (multi-scale) approach:</b>
-          <p>
-            For high-resolution .tif files, I downscale the channels repeatedly by 0.5
-            until the smallest side is ~250 px. Alignment starts at the coarsest level
-            with a slightly larger search window (10x10 pixels), then at each finer level the shift is
-            doubled and refined locally (5x5 pixels). This coarse-to-fine refinement
-            allows handling of large displacements efficiently while keeping runtime
-            reasonable.
-          </p>
-        </li>
+            <li>
+              <b>Image preprocessing &amp; cropping:</b>
+              <p>
+                Each plate is read, converted to <code>float64</code> in [0,1], and split
+                into B, G, and R channels. I applied a <em>hard pre-crop</em> (to remove
+                thick borders), ensuring the wraparound edges and black borders
+                don’t bias the metrics. Then, I also applied an interior crop when scoring
+                with ZNCC to avoid wraparound artifacts caused by <code>np.roll</code> (and to utilize the
+                center of the image, which is most reliable due to vignetting, chromatic aberration, etc.)
+              </p>
+            </li>
 
-        <li>
-          <b>Edge detection:</b>
-          <p>
-            To mitigate rainbow ghosting in textured or low-contrast regions, I added
-            an edge-based mode where ZNCC is computed not on raw intensity but on edge
-            maps. I implemented Sobel, Scharr, and Gaussian gradient magnitude. This
-            makes alignment more robust, especially on images with strong borders or
-            repeated patterns (e.g., melons).
-          </p>
-        </li>
-      </ol>
+            <li>
+              <b>Pyramid (multi-scale) approach:</b>
+              <p>
+                For high-resolution .tif files, I downscale the channels repeatedly by 0.5
+                until the smallest side is ~250 px. Alignment starts at the coarsest level
+                with a slightly larger search window (10x10 pixels), then at each finer level the shift is
+                doubled and refined locally (5x5 pixels). This coarse-to-fine refinement
+                allows handling of large displacements efficiently while keeping runtime
+                reasonable.
+              </p>
+            </li>
 
-      <section class="part" id="issues">
-        <h2>Issues &amp; Fixes</h2>
-        <ul>
-          <li><b>Rainbow ghosting:</b> reduced with stricter cropping and edge-based scoring.</li>
-          <li><b>Large shifts in TIFFs:</b> handled via coarse→fine image pyramid.</li>
-        </ul>
-      </section>
+            <li>
+              <b>Edge detection:</b>
+              <p>
+                To mitigate rainbow ghosting in textured or low-contrast regions, I added
+                an edge-based mode where ZNCC is computed not on raw intensity but on edge
+                maps. I implemented Sobel, Scharr, and Gaussian gradient magnitude. This
+                makes alignment more robust, especially on images with strong borders or
+                repeated patterns (e.g., melons).
+              </p>
+            </li>
+          </ol>
+
+          <h2 id="issues">Issues &amp; Fixes</h2>
+          <ul>
+            <li><b>Rainbow ghosting:</b> reduced with stricter cropping and edge-based scoring.</li>
+            <li><b>Large shifts in TIFFs:</b> handled via coarse→fine image pyramid.</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <!-- ===== Single-scale (required 3 JPGs) ===== -->
-    <section class="part" id="single-scale">
-      <h2>Single-Scale Alignment</h2>
+    <section class="section" id="single-scale">
+      <div class="container">
+        <div class="prose">
+          <h2>Single-Scale Alignment</h2>
 
-      <h3>Approach</h3>
-      <p>
-        Exhaustive search over ±window on the original resolution using <strong>NCC</strong>.
-        Scores are computed on an interior crop (cutting off 10% on each side, so essentially about 64% of the image) 
-        to avoid border artifacts. Offsets are reported as <code>(dx, dy)</code>
-        with +dx = right and +dy = down.
-      </p>
+          <h3>Approach</h3>
+          <p>
+            Exhaustive search over ±window on the original resolution using <strong>NCC</strong>.
+            Scores are computed on an interior crop (cutting off 10% on each side, so essentially about 64% of the image) 
+            to avoid border artifacts. Offsets are reported as <code>(dx, dy)</code>
+            with +dx = right and +dy = down.
+          </p>
 
-      <h3>Results (3 provided JPGs)</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Metric</th>
-            <th>G → B (dx, dy)</th>
-            <th>R → B (dx, dy)</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Replace with your actual numbers; add L2 rows if you ran them -->
-          <tr><td>cathedral.jpg</td><td>NCC</td><td>(2, 5)</td><td>(3, 12)</td><td>clean</td></tr>
-          <tr><td>monastery.jpg</td><td>NCC</td><td>(2, -3)</td><td>(2, 3)</td><td>clean</td></tr>
-          <tr><td>tobolsk.jpg</td><td>NCC</td><td>(3, 3)</td><td>(3, 6)</td><td>clean</td></tr>
-        </tbody>
-      </table>
+          <h3>Results (3 provided JPGs)</h3>
 
-      <div class="figure-grid">
-        <figure><img src="assets/single_scale/cathedral.jpg" alt="cathedral (single-scale)"><figcaption>cathedral — single-scale (NCC)</figcaption></figure>
-        <figure><img src="assets/single_scale/monastery.jpg" alt="monastery (single-scale)"><figcaption>monastery — single-scale (NCC)</figcaption></figure>
-        <figure><img src="assets/single_scale/tobolsk.jpg" alt="tobolsk (single-scale)"><figcaption>tobolsk — single-scale (NCC)</figcaption></figure>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Metric</th>
+                  <th>G → B (dx, dy)</th>
+                  <th>R → B (dx, dy)</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>cathedral.jpg</td><td>NCC</td><td>(2, 5)</td><td>(3, 12)</td><td>clean</td></tr>
+                <tr><td>monastery.jpg</td><td>NCC</td><td>(2, -3)</td><td>(2, 3)</td><td>clean</td></tr>
+                <tr><td>tobolsk.jpg</td><td>NCC</td><td>(3, 3)</td><td>(3, 6)</td><td>clean</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Full-bleed grid (outside .prose to span wider) -->
+        <div class="full-bleed">
+          <div class="figure-grid">
+            <figure><img src="assets/single_scale/cathedral.jpg" alt="cathedral (single-scale)"><figcaption>cathedral — single-scale (NCC)</figcaption></figure>
+            <figure><img src="assets/single_scale/monastery.jpg" alt="monastery (single-scale)"><figcaption>monastery — single-scale (NCC)</figcaption></figure>
+            <figure><img src="assets/single_scale/tobolsk.jpg" alt="tobolsk (single-scale)"><figcaption>tobolsk — single-scale (NCC)</figcaption></figure>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ===== Multi-scale pyramid (NCC/L2) ===== -->
-    <section class="part" id="pyramid">
-      <h2>Multi-Scale Pyramid Alignment (with NCC)</h2>
+    <section class="section" id="pyramid">
+      <div class="container">
+        <div class="prose">
+          <h2>Multi-Scale Pyramid Alignment (with NCC)</h2>
 
-      <h3>Step-by-step</h3>
-      <ol>
-        <li>Build pyramid by downscaling by 0.5 until min side ≈ 250 px.</li>
-        <li>At the coarsest level, search a slightly larger window (e.g., ±10) with <strong>NCC</strong>; record best (dx, dy).</li>
-        <li>Move one level finer: double (dx, dy) and refine in a small window (±5).</li>
-        <li>Repeat until full resolution; apply final shifts to compose RGB.</li>
-      </ol>
+          <h3>Step-by-step</h3>
+          <ol>
+            <li>Build pyramid by downscaling by 0.5 until min side ≈ 250 px.</li>
+            <li>At the coarsest level, search a slightly larger window (e.g., ±10) with <strong>NCC</strong>; record best (dx, dy).</li>
+            <li>Move one level finer: double (dx, dy) and refine in a small window (±5).</li>
+            <li>Repeat until full resolution; apply final shifts to compose RGB.</li>
+          </ol>
 
-      <h3>Results on Full Set (NCC)</h3>
-      <p>
-        <strong>Alignment defects:</strong> <span class="tag">1 / 14</span>
-        <!-- Replace X with your count; ≤1 earns full results credit. -->
-      </p>
+          <h3>Results on Full Set (NCC)</h3>
+          <p>
+            <strong>Alignment defects:</strong> <span class="tag">1 / 14</span>
+          </p>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>G → B (dx, dy)</th>
-            <th>R → B (dx, dy)</th>
-            <th>Runtime (s)</th>
-            <th>Defect?</th>
-            <th>Notes (NCC/L2)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>church.tif</td><td>(4, 25)</td><td>(-4, 58)</td><td>12.865</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>emir.tif</td><td>(24, 49)</td><td>(43, 61)</td><td>14.541</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>harvesters.tif</td><td>(17, 59)</td><td>(14, 124)</td><td>14.859</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>icon.tif</td><td>(17, 41)</td><td>(23, 89)</td><td>14.253</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>italil.tif</td><td>(21, 38)</td><td>(35, 77)</td><td>16.824</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>lastochikino.tif</td><td>(-2, -3)</td><td>(-9, 75)</td><td>18.258</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>lugano.tif</td><td>(-16, 41)</td><td>(-29, 93)</td><td>18.184</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>melons.tif</td><td>(11, 82)</td><td>(14, 178)</td><td>15.233</td><td><!-- mark Yes if ghosting persists --></td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>self_portrait.tif</td><td>(29, 79)</td><td>(37, 176)</td><td>15.815</td><td><!-- mark Yes if ghosting persists --></td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>siren.tif</td><td>(-6, 49)</td><td>(-24, 96)</td><td>15.543</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-          <tr><td>three_generations.tif</td><td>(14, 52)</td><td>(11, 111)</td><td>15.279</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-        </tbody>
-      </table>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>G → B (dx, dy)</th>
+                  <th>R → B (dx, dy)</th>
+                  <th>Runtime (s)</th>
+                  <th>Defect?</th>
+                  <th>Notes (NCC/L2)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>church.tif</td><td>(4, 25)</td><td>(-4, 58)</td><td>12.865</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>emir.tif</td><td>(24, 49)</td><td>(43, 61)</td><td>14.541</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>harvesters.tif</td><td>(17, 59)</td><td>(14, 124)</td><td>14.859</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>icon.tif</td><td>(17, 41)</td><td>(23, 89)</td><td>14.253</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>italil.tif</td><td>(21, 38)</td><td>(35, 77)</td><td>16.824</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>lastochikino.tif</td><td>(-2, -3)</td><td>(-9, 75)</td><td>18.258</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>lugano.tif</td><td>(-16, 41)</td><td>(-29, 93)</td><td>18.184</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>melons.tif</td><td>(11, 82)</td><td>(14, 178)</td><td>15.233</td><td></td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>self_portrait.tif</td><td>(29, 79)</td><td>(37, 176)</td><td>15.815</td><td></td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>siren.tif</td><td>(-6, 49)</td><td>(-24, 96)</td><td>15.543</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+                <tr><td>three_generations.tif</td><td>(14, 52)</td><td>(11, 111)</td><td>15.279</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-      <div class="figure-grid">
-        <!-- Include compressed outputs (JPG/PNG) for selected .tif results -->
-        <!-- <figure><img src="outputs/tif/emir.jpg" alt="emir (pyramid NCC)"><figcaption>emir — pyramid (NCC)</figcaption></figure> -->
-      </div>
+        <div class="full-bleed">
+          <div class="figure-grid">
+            <!-- optional pyramid outputs -->
+            <!-- <figure><img src="outputs/tif/emir.jpg" alt="emir (pyramid NCC)"><figcaption>emir — pyramid (NCC)</figcaption></figure> -->
+          </div>
+        </div>
 
-      <details class="notes">
-        <summary>Failure / Difficult Cases (required explanation if any)</summary>
-        <p>
-          If any image failed with NCC, I explain likely causes (thick borders, low texture, repeated patterns)
-          and attempted fixes (hard pre-crop, interior crop, slightly larger coarsest window).
-        </p>
-      </details>
-    </section>
-
-    <!-- ===== Extra chosen images (still with NCC/L2 for rubric) ===== -->
-    <section class="part" id="own">
-      <h2>Additional Images from the Collection (NCC)</h2>
-      <p>Tested a few extra plates with the same fixed parameters (no per-image tuning).</p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>G → B</th>
-            <th>R → B</th>
-            <th>Method</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>melons.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>NCC, pyramid</td></tr>
-          <tr><td>self_portrait.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>NCC, pyramid</td></tr>
-        </tbody>
-      </table>
-
-      <div class="figure-grid">
-        <figure>
-          <img src="outputs/extra/melons.jpg" alt="melons (NCC)">
-          <figcaption>melons — NCC, pyramid</figcaption>
-        </figure>
-        <figure>
-          <img src="outputs/extra/self_portrait.jpg" alt="self-portrait (NCC)">
-          <figcaption>self-portrait — NCC, pyramid</figcaption>
-        </figure>
+        <div class="prose">
+          <details class="notes">
+            <summary>Failure / Difficult Cases (required explanation if any)</summary>
+            <p>
+              If any image failed with NCC, I explain likely causes (thick borders, low texture, repeated patterns)
+              and attempted fixes (hard pre-crop, interior crop, slightly larger coarsest window).
+            </p>
+          </details>
+        </div>
       </div>
     </section>
 
-    <!-- ===== Bells & Whistles (separate from rubric) ===== -->
-    <section class="part" id="bells">
-      <h2>Bells &amp; Whistles (Not used for rubric scoring)</h2>
-      <ul>
-        <li><b>Edge-based scoring:</b> ZNCC on Sobel / Scharr / Gaussian gradient magnitude.</li>
-        <li><b>Hard pre-crop:</b> automatic plate-border trimming.</li>
-      </ul>
+    <!-- ===== Extra chosen images ===== -->
+    <section class="section" id="own">
+      <div class="container">
+        <div class="prose">
+          <h2>Additional Images from the Collection (NCC)</h2>
+          <p>Tested a few extra plates with the same fixed parameters (no per-image tuning).</p>
 
-      <div class="figure-grid">
-        <!-- Before/after illustrating a quality improvement -->
-        <figure>
-          <img src="assets/bw_before_melons.png" alt="melons before (NCC only)">
-          <figcaption>Before — NCC only (notice residual fringe)</figcaption>
-        </figure>
-        <figure>
-          <img src="assets/bw_after_melons.png" alt="melons after (extras)">
-          <figcaption>After — edges + larger coarsest window</figcaption>
-        </figure>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>G → B</th>
+                  <th>R → B</th>
+                  <th>Method</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>melons.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>NCC, pyramid</td></tr>
+                <tr><td>self_portrait.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>NCC, pyramid</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="full-bleed">
+          <div class="figure-grid">
+            <figure>
+              <img src="outputs/extra/melons.jpg" alt="melons (NCC)">
+              <figcaption>melons — NCC, pyramid</figcaption>
+            </figure>
+            <figure>
+              <img src="outputs/extra/self_portrait.jpg" alt="self-portrait (NCC)">
+              <figcaption>self-portrait — NCC, pyramid</figcaption>
+            </figure>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <p class="notes">
-        Per the rubric, I still document NCC results above. These enhancements are for better quality and speed.
-      </p>
+    <!-- ===== Bells & Whistles ===== -->
+    <section class="section" id="bells">
+      <div class="container">
+        <div class="prose">
+          <h2>Bells &amp; Whistles (Not used for rubric scoring)</h2>
+          <ul>
+            <li><b>Edge-based scoring:</b> ZNCC on Sobel / Scharr / Gaussian gradient magnitude.</li>
+            <li><b>Hard pre-crop:</b> automatic plate-border trimming.</li>
+          </ul>
+        </div>
+
+        <div class="full-bleed">
+          <div class="figure-grid">
+            <figure>
+              <img src="assets/bw_before_melons.png" alt="melons before (NCC only)">
+              <figcaption>Before — NCC only (notice residual fringe)</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/bw_after_melons.png" alt="melons after (extras)">
+              <figcaption>After — edges + larger coarsest window</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="prose">
+          <p class="notes">
+            Per the rubric, I still document NCC results above. These enhancements are for better quality and speed.
+          </p>
+        </div>
+      </div>
     </section>
 
     <!-- ===== Notes / Runtime ===== -->
-    <section class="part" id="notes">
-      <h2>Notes &amp; Runtime</h2>
-      <ul>
-        <li>Parameters are fixed across images (no per-image hand tuning).</li>
-        <li>Typical runtime: &lt; 20 seconds per large image.</li>
-        <li>All outputs on this page are compressed (JPG/PNG). <strong>No TIFF uploads.</strong></li>
-      </ul>
+    <section class="section" id="notes">
+      <div class="container">
+        <div class="prose">
+          <h2>Notes &amp; Runtime</h2>
+          <ul>
+            <li>Parameters are fixed across images (no per-image hand tuning).</li>
+            <li>Typical runtime: &lt; 20 seconds per large image.</li>
+            <li>All outputs on this page are compressed (JPG/PNG). <strong>No TIFF uploads.</strong></li>
+          </ul>
+        </div>
+      </div>
     </section>
 
   </main>
