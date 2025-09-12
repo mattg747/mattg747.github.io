@@ -44,7 +44,7 @@ footer {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   padding: 2rem;
-  max-width: 1000px;
+  max-width: 1100px;   /* widened */
   margin: 0 auto;
 }
 .card {
@@ -68,16 +68,20 @@ footer {
 .part {
   padding: 2rem 1rem;
   border-top: 1px solid #243244;
-  max-width: 1000px;
+  max-width: 1100px;   /* widened */
   margin: 0 auto;
 }
 .part h2 {
   margin: 0 0 .5rem;
   font-size: clamp(22px, 3vw, 28px);
 }
-.part p {
+.part p,
+.part ul,
+.part ol {
   color: #cdd6e5;
-  max-width: 70ch;
+  max-width: 75ch;          /* keep readable line length */
+  margin-left: auto;        /* center horizontally */
+  margin-right: auto;
 }
 
 /* Side-by-side figure grid */
