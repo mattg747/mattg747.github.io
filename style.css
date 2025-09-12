@@ -68,24 +68,24 @@ footer {
 .part {
   padding: 2rem 1rem;
   border-top: 1px solid #243244;
-  max-width: 1100px;   /* overall container width */
-  margin: 0 auto;      /* centers the section itself */
+  max-width: 1100px;   /* section container width */
+  margin: 0 auto;      /* center the section itself */
 }
 
-/* Headers and text share the same column width */
-.part h2,
+/* Text blocks */
 .part p,
 .part ul,
 .part ol {
-  max-width: 125ch;      /* consistent column */
-  margin-left: auto;    /* center the block */
+  max-width: 75ch;      /* readable column width */
+  margin-left: auto;    /* center horizontally */
   margin-right: auto;
+  color: #cdd6e5;
 }
 
+/* Headers aligned with the same column */
 .part h2 {
-  margin-top: 0;
-  margin-left: 50;
-  margin-bottom: 0.5rem;
+  max-width: 75ch;          /* same width as text */
+  margin: 0 auto 0.5rem;    /* center + bottom spacing */
   font-size: clamp(22px, 3vw, 28px);
 }
 
