@@ -18,36 +18,63 @@
     <section class="part" id="overview">
       <h2>Overview</h2>
       <p>
-        In this project, we use digitized glass plates — taken by Prokudin-Gorskii in the early 1900s by using red,
-        green, and blue filters for a total of three exposures for each photograph — to reconstruct color images
-        through careful alignment of the three color channels. First, we split the glass plate scan into three sections
-        to separate each color filter exposure. To align the images, we search over a small window (for my implementation,
-        15 pixels wide/tall) and evaluate how well the color channels match with Normalized Cross-Correlation. 
-        This kind of exhaustive search works well enough for .jpg files, but larger .tif files required a more efficient,
-        image pyramid method (going from small, scaled-down, coarse images to the full-resolution starting image
-        and shifting the alignment at each level) in order to run in a reasonable amount of time.
+        In this project, I used digitized glass plates — taken by Prokudin-Gorskii in the early 1900s by using red, green, and blue filters for a total of three exposures for each photograph — to reconstruct color images through careful alignment of the three color channels. First, I split the glass plate scan into three sections to separate each color filter exposure. To align the images, the code searches over a small window (for my implementation, 15 pixels wide/tall) and evaluates how well the color channels match with Normalized Cross-Correlation. This kind of exhaustive search works well enough for .jpg files, but larger .tif files required a more efficient, image pyramid method (going from small, scaled-down, coarse/blurry images to the full-resolution starting image and shifting the alignment at each level) in order to run in a reasonable amount of time. Then, to improve accuracy even further, I implemented edge detection and used that as the feature space for scoring via NCC rather than simply RGB values.
       </p>
 
       <h2>Method / Approach</h2>
-      <ul>
-        <li><b>Preprocessing:</b> read, convert to <code>float64</code> in [0,1], split B/G/R, and hard pre-crop to remove thick borders.</li>
-        <li><b>Scoring:</b> <strong>NCC/ZNCC</strong> computed on a cropped image (to avoid the glass plate borders biasing the metrics).</li>
-        <li><b>Alignment:</b>
-          <ul>
-            <li><b>Single-scale baseline:</b> exhaustive integer search over a window (e.g., ±15) for small JPGs.</li>
-            <li><b>Image pyramid:</b> downscale by 0.5 to min side ~250 px; align at the coarsest (slightly larger window), then at each finer level double the shift and refine the shift amount.</li>
-          </ul>
+      <ol>
+        <li>
+          <b>Single-scale baseline:</b>
+          <p>
+            For small JPGs, I implemented an exhaustive integer search within a fixed
+            window (e.g., ±15 pixels) using Zero-mean Normalized Cross-Correlation
+            (ZNCC). This works well enough for low-resolution images but is too slow
+            and limited for larger .tif files.
+          </p>
         </li>
-        <li><b>Post:</b> stack (R,G,B) → RGB, small border trim (2–3%) to hide seams; save as JPG/PNG (no TIFFs uploaded).</li>
-      </ul>
 
-      <details class="notes">
-        <summary>Issues &amp; fixes (high level)</summary>
+        <li>
+          <b>Image preprocessing & cropping:</b>
+          <p>
+            Each plate is read, converted to <code>float64</code> in [0,1], and split
+            into B, G, and R channels. I apply both a <em>hard pre-crop</em> (to remove
+            thick borders) and an <em>interior crop percentage</em> (e.g., 10%) when
+            computing alignment scores, ensuring the wraparound edges and black borders
+            don’t bias the metrics.
+          </p>
+        </li>
+
+        <li>
+          <b>Pyramid (multi-scale) approach:</b>
+          <p>
+            For high-resolution .tif files, I downscale the channels repeatedly by 0.5
+            until the smallest side is ~250 px. Alignment starts at the coarsest level
+            with a slightly larger search window, then at each finer level the shift is
+            doubled and refined locally (±5–7 pixels). This coarse-to-fine refinement
+            allows handling of large displacements efficiently while keeping runtime
+            reasonable.
+          </p>
+        </li>
+
+        <li>
+          <b>Edge detection:</b>
+          <p>
+            To mitigate rainbow ghosting in textured or low-contrast regions, I added
+            an edge-based mode where ZNCC is computed not on raw intensity but on edge
+            maps. I implemented Sobel, Scharr, and Gaussian gradient magnitude. This
+            makes alignment more robust, especially on images with strong borders or
+            repeated patterns (e.g., melons).
+          </p>
+        </li>
+      </ol>
+
+      <section class="part" id="issues">
+        <h2>Issues &amp; Fixes</h2>
         <ul>
-          <li><b>Rainbow ghosting:</b> reduced with stricter cropping and edge-based scoring (Sobel, Scharr, and Gaussian).</li>
+          <li><b>Rainbow ghosting:</b> reduced with stricter cropping and edge-based scoring.</li>
           <li><b>Large shifts in TIFFs:</b> handled via coarse→fine pyramid.</li>
         </ul>
-      </details>
+      </section>
     </section>
 
     <!-- ===== Single-scale (required 3 JPGs) ===== -->
