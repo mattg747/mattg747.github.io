@@ -1,5 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
+/* === Layout tokens === */
+:root {
+  --section-width: 1100px;   /* overall section container width */
+  --content-width: 75ch;     /* centered column width for headings/text */
+}
+
 /* Global */
 * { box-sizing: border-box; }
 body {
@@ -44,7 +50,7 @@ footer {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   padding: 2rem;
-  max-width: 1100px;   /* widened */
+  max-width: var(--section-width);
   margin: 0 auto;
 }
 .card {
@@ -68,34 +74,63 @@ footer {
 .part {
   padding: 2rem 1rem;
   border-top: 1px solid #243244;
-  max-width: 1100px;   /* section container width */
-  margin: 0 auto;      /* center the section itself */
+  max-width: var(--section-width);  /* center the whole section */
+  margin: 0 auto;
+}
+
+/* HEADERS + TEXT share the SAME centered column */
+.part :is(h2, h3, p, ul, ol, table) {
+  max-width: var(--content-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.part h2 {
+  margin: 0 0 .5rem;
+  font-size: clamp(22px, 3vw, 28px);
+}
+.part h3 {
+  margin: 1rem auto .4rem;
+  font-size: clamp(18px, 2.5vw, 22px);
 }
 
 /* Text blocks */
 .part p,
 .part ul,
 .part ol {
-  max-width: 75ch;      /* readable column width */
-  margin-left: auto;    /* center horizontally */
-  margin-right: auto;
   color: #cdd6e5;
 }
-
-/* Headers aligned with the same column */
-.part h2 {
-  max-width: 75ch;          /* same width as text */
-  margin: 0 auto 0.5rem;    /* center + bottom spacing */
-  font-size: clamp(22px, 3vw, 28px);
-}
-
-.part p,
 .part ul,
 .part ol {
-  color: #cdd6e5;
+  padding-left: 1.25rem;  /* keep bullets nicely indented within the column */
 }
 
-/* Side-by-side figure grid */
+/* Tables (results) */
+.part table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #0f172a;
+  border: 1px solid #243244;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.part thead th {
+  text-align: left;
+  background: #111c2b;
+  color: #e5e7eb;
+  font-weight: 600;
+  padding: .6rem .75rem;
+}
+.part tbody td {
+  padding: .55rem .75rem;
+  border-top: 1px solid #243244;
+  color: #d6dee9;
+}
+.part tbody tr:nth-child(even) td {
+  background: #121b2b;
+}
+
+/* Side-by-side figure grid (keeps full section width) */
 .figure-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -117,6 +152,7 @@ figcaption {
   padding: .6rem .8rem;
   font-size: .9rem;
   color: #cfd6e6;
+  text-align: center;
 }
 
 /* Notes/steps/media */
