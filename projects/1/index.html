@@ -127,7 +127,7 @@
       </div>
     </section>
 
-    <!-- ===== Multi-scale pyramid (NCC/L2) ===== -->
+    <!-- ===== Multi-scale pyramid (NCC) ===== -->
     <section class="section" id="pyramid">
       <div class="container">
         <div class="prose">
@@ -175,21 +175,39 @@
           </div>
         </div>
 
+        <!-- === All pyramid outputs (right after table) === -->
         <div class="full-bleed">
           <div class="figure-grid">
-            <!-- optional pyramid outputs -->
-            <!-- <figure><img src="outputs/tif/emir.jpg" alt="emir (pyramid NCC)"><figcaption>emir — pyramid (NCC)</figcaption></figure> -->
+            <figure><img src="assets/pyramid/church.jpg" alt="church (pyramid NCC)"><figcaption>church — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/emir.jpg" alt="emir (pyramid NCC)"><figcaption>emir — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/harvesters.jpg" alt="harvesters (pyramid NCC)"><figcaption>harvesters — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/icon.jpg" alt="icon (pyramid NCC)"><figcaption>icon — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/italil.jpg" alt="italil (pyramid NCC)"><figcaption>italil — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/lastochikino.jpg" alt="lastochikino (pyramid NCC)"><figcaption>lastochikino — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/lugano.jpg" alt="lugano (pyramid NCC)"><figcaption>lugano — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/melons.jpg" alt="melons (pyramid NCC)"><figcaption>melons — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/self_portrait.jpg" alt="self portrait (pyramid NCC)"><figcaption>self_portrait — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/siren.jpg" alt="siren (pyramid NCC)"><figcaption>siren — pyramid (NCC)</figcaption></figure>
+            <figure><img src="assets/pyramid/three_generations.jpg" alt="three generations (pyramid NCC)"><figcaption>three_generations — pyramid (NCC)</figcaption></figure>
           </div>
         </div>
 
+        <!-- === Difficult / Failure Cases (permanent prose section) === -->
         <div class="prose">
-          <details class="notes">
-            <summary>Failure / Difficult Cases (required explanation if any)</summary>
-            <p>
-              If any image failed with NCC, I explain likely causes (thick borders, low texture, repeated patterns)
-              and attempted fixes (hard pre-crop, interior crop, slightly larger coarsest window).
-            </p>
-          </details>
+          <h3>Difficult / Failure Cases</h3>
+          <p>
+            <b>emir.tif (challenging without edge detection):</b> The Emir’s portrait has strong, saturated reds and dark blues in
+            the robe and background. These channels differ substantially in brightness and contrast, so raw-intensity NCC tends
+            to maximize correlation on <em>color</em> rather than <em>structure</em>. In addition, the fabric’s ornate, repeating
+            patterns produce many near-duplicate local patches. Together, these effects create false peaks in the NCC surface and
+            encourage small but visible misalignments (color fringing), especially around the robe trim and high-contrast borders.
+          </p>
+          <p>
+            <b>Mitigation:</b> using Sobel/Scharr edge maps for scoring makes the metric far less sensitive to per-channel
+            brightness/saturation differences and repetitive color textures. Combined with a hard pre-crop and a slightly larger
+            coarse-level search window in the pyramid, the edge-based NCC reliably snaps the channels to structural boundaries
+            (seams, facial contours, and jewelry edges), removing the rainbow halo.
+          </p>
         </div>
       </div>
     </section>
