@@ -37,10 +37,11 @@
           <b>Image preprocessing & cropping:</b>
           <p>
             Each plate is read, converted to <code>float64</code> in [0,1], and split
-            into B, G, and R channels. I apply both a <em>hard pre-crop</em> (to remove
-            thick borders) and an <em>interior crop percentage</em> (e.g., 10%) when
-            computing alignment scores, ensuring the wraparound edges and black borders
-            don’t bias the metrics.
+            into B, G, and R channels. I applied a <em>hard pre-crop</em> (to remove
+            thick borders), ensuring the wraparound edges and black borders
+            don’t bias the metrics. Then, I also applied an interior crop when scoring
+            with ZNCC to avoid wraparound artifacts caused by np.roll (and to utilize the
+            center of the image, which is most reliable due to vignetting, chromatic aberration, etc.)
           </p>
         </li>
 
@@ -49,8 +50,8 @@
           <p>
             For high-resolution .tif files, I downscale the channels repeatedly by 0.5
             until the smallest side is ~250 px. Alignment starts at the coarsest level
-            with a slightly larger search window, then at each finer level the shift is
-            doubled and refined locally (±5–7 pixels). This coarse-to-fine refinement
+            with a slightly larger search window (10x10 pixels), then at each finer level the shift is
+            doubled and refined locally (5x5 pixels). This coarse-to-fine refinement
             allows handling of large displacements efficiently while keeping runtime
             reasonable.
           </p>
@@ -72,7 +73,7 @@
         <h2>Issues &amp; Fixes</h2>
         <ul>
           <li><b>Rainbow ghosting:</b> reduced with stricter cropping and edge-based scoring.</li>
-          <li><b>Large shifts in TIFFs:</b> handled via coarse→fine pyramid.</li>
+          <li><b>Large shifts in TIFFs:</b> handled via coarse→fine image pyramid.</li>
         </ul>
       </section>
     </section>
