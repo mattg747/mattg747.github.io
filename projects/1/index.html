@@ -18,21 +18,24 @@
     <section class="part" id="overview">
       <h2>Overview</h2>
       <p>
-        We reconstruct color photographs from digitized Prokudin–Gorskii glass plates by splitting the
-        scan into three monochrome bands (top→bottom = B, G, R), aligning G and R to B, and stacking to form RGB.
-        I implemented a <em>single-scale</em> baseline and a <em>multi-scale pyramid</em> (coarse→fine). To satisfy the rubric,
-        results are reported with <strong>NCC</strong> (and optionally L2/SSD). Any enhanced methods (edges, weighting, etc.)
-        are shown later under <em>Bells &amp; Whistles</em>.
+        In this project, we use digitized glass plates — taken by Prokudin-Gorskii in the early 1900s by using red,
+        green, and blue filters for a total of three exposures for each photograph — to reconstruct color images
+        through careful alignment of the three color channels. First, we split the glass plate scan into three sections
+        to separate each color filter exposure. To align the images, we search over a small window (for my implementation,
+        15 pixels wide/tall) and evaluate how well the color channels match with Normalized Cross-Correlation. 
+        This kind of exhaustive search works well enough for .jpg files, but larger .tif files required a more efficient,
+        image pyramid method (going from small, scaled-down, coarse images to the full-resolution starting image
+        and shifting the alignment at each level) in order to run in a reasonable amount of time.
       </p>
 
       <h2>Method / Approach</h2>
       <ul>
         <li><b>Preprocessing:</b> read, convert to <code>float64</code> in [0,1], split B/G/R, and hard pre-crop to remove thick borders.</li>
-        <li><b>Scoring (rubric):</b> <strong>NCC/ZNCC</strong> (and optionally L2/SSD) computed on an interior crop (~10%) to avoid wrap/edges.</li>
+        <li><b>Scoring:</b> <strong>NCC/ZNCC</strong> computed on a cropped image (to avoid the glass plate borders biasing the metrics).</li>
         <li><b>Alignment:</b>
           <ul>
             <li><b>Single-scale baseline:</b> exhaustive integer search over a window (e.g., ±15) for small JPGs.</li>
-            <li><b>Image pyramid:</b> downscale by 0.5 to min side ~250 px; align at the coarsest (slightly larger window), then at each finer level double the shift and refine in ±5–7.</li>
+            <li><b>Image pyramid:</b> downscale by 0.5 to min side ~250 px; align at the coarsest (slightly larger window), then at each finer level double the shift and refine the shift amount.</li>
           </ul>
         </li>
         <li><b>Post:</b> stack (R,G,B) → RGB, small border trim (2–3%) to hide seams; save as JPG/PNG (no TIFFs uploaded).</li>
@@ -41,8 +44,7 @@
       <details class="notes">
         <summary>Issues &amp; fixes (high level)</summary>
         <ul>
-          <li><b>Rainbow ghosting:</b> reduced with interior crops and (in extras) edge-based scoring + small full-res refinement.</li>
-          <li><b>Border bias:</b> hard pre-crop + interior crop; optional center weighting (extras).</li>
+          <li><b>Rainbow ghosting:</b> reduced with stricter cropping and edge-based scoring (Sobel, Scharr, and Gaussian).</li>
           <li><b>Large shifts in TIFFs:</b> handled via coarse→fine pyramid.</li>
         </ul>
       </details>
@@ -50,12 +52,13 @@
 
     <!-- ===== Single-scale (required 3 JPGs) ===== -->
     <section class="part" id="single-scale">
-      <h2>Single-Scale Alignment (Required Baseline)</h2>
+      <h2>Single-Scale Alignment</h2>
 
-      <h3>Approach (for rubric)</h3>
+      <h3>Approach</h3>
       <p>
-        Exhaustive search over ±window on the original resolution using <strong>NCC</strong> (and optionally L2).
-        Scores are computed on an interior crop (~10%) to avoid border artifacts. Offsets are reported as <code>(dx, dy)</code>
+        Exhaustive search over ±window on the original resolution using <strong>NCC</strong>.
+        Scores are computed on an interior crop (cutting off 10% on each side, so essentially about 64% of the image) 
+        to avoid border artifacts. Offsets are reported as <code>(dx, dy)</code>
         with +dx = right and +dy = down.
       </p>
 
@@ -72,32 +75,32 @@
         </thead>
         <tbody>
           <!-- Replace with your actual numbers; add L2 rows if you ran them -->
-          <tr><td>cathedral.jpg</td><td>NCC</td><td>(5, 2)</td><td>(12, 3)</td><td>clean</td></tr>
-          <tr><td>monastery.jpg</td><td>NCC</td><td>(-3, 2)</td><td>(3, 2)</td><td>clean</td></tr>
-          <tr><td>tobolsk.jpg</td><td>NCC</td><td>(3, 3)</td><td>(6, 3)</td><td>clean</td></tr>
+          <tr><td>cathedral.jpg</td><td>NCC</td><td>(2, 5)</td><td>(3, 12)</td><td>clean</td></tr>
+          <tr><td>monastery.jpg</td><td>NCC</td><td>(2, -3)</td><td>(2, 3)</td><td>clean</td></tr>
+          <tr><td>tobolsk.jpg</td><td>NCC</td><td>(3, 3)</td><td>(3, 6)</td><td>clean</td></tr>
         </tbody>
       </table>
 
       <div class="figure-grid">
-        <figure><img src="outputs/jpg/cathedral.jpg" alt="cathedral (single-scale)"><figcaption>cathedral — single-scale (NCC)</figcaption></figure>
-        <figure><img src="outputs/jpg/monastery.jpg" alt="monastery (single-scale)"><figcaption>monastery — single-scale (NCC)</figcaption></figure>
-        <figure><img src="outputs/jpg/tobolsk.jpg" alt="tobolsk (single-scale)"><figcaption>tobolsk — single-scale (NCC)</figcaption></figure>
+        <figure><img src="assets/single_scale/cathedral.jpg" alt="cathedral (single-scale)"><figcaption>cathedral — single-scale (NCC)</figcaption></figure>
+        <figure><img src="assets/single_scale/monastery.jpg" alt="monastery (single-scale)"><figcaption>monastery — single-scale (NCC)</figcaption></figure>
+        <figure><img src="assets/single_scale/tobolsk.jpg" alt="tobolsk (single-scale)"><figcaption>tobolsk — single-scale (NCC)</figcaption></figure>
       </div>
     </section>
 
     <!-- ===== Multi-scale pyramid (NCC/L2) ===== -->
     <section class="part" id="pyramid">
-      <h2>Multi-Scale Pyramid Alignment (with NCC / L2)</h2>
+      <h2>Multi-Scale Pyramid Alignment (with NCC)</h2>
 
-      <h3>Step-by-step (for rubric)</h3>
+      <h3>Step-by-step</h3>
       <ol>
         <li>Build pyramid by downscaling by 0.5 until min side ≈ 250 px.</li>
-        <li>At the coarsest level, search a slightly larger window (e.g., ±8–10) with <strong>NCC</strong> (or L2); record best (dx, dy).</li>
-        <li>Move one level finer: double (dx, dy) and refine in a small window (±5–7).</li>
+        <li>At the coarsest level, search a slightly larger window (e.g., ±10) with <strong>NCC</strong>; record best (dx, dy).</li>
+        <li>Move one level finer: double (dx, dy) and refine in a small window (±5).</li>
         <li>Repeat until full resolution; apply final shifts to compose RGB.</li>
       </ol>
 
-      <h3>Results on Full Set (NCC or L2)</h3>
+      <h3>Results on Full Set (NCC)</h3>
       <p>
         <strong>Alignment defects:</strong> <span class="tag">X / 14</span>
         <!-- Replace X with your count; ≤1 earns full results credit. -->
@@ -109,17 +112,23 @@
             <th>Image</th>
             <th>G → B (dx, dy)</th>
             <th>R → B (dx, dy)</th>
+            <th>Runtime (s)</th>
             <th>Defect?</th>
             <th>Notes (NCC/L2)</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Fill with your 14 images; mark “Yes/No” in Defect column -->
-          <tr><td>emir.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>No</td><td>NCC, pyramid</td></tr>
-          <tr><td>train.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>No</td><td>NCC, pyramid</td></tr>
-          <tr><td>melons.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td><!-- Yes/No --></td><td>NCC, pyramid</td></tr>
-          <tr><td>self_portrait.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td><!-- Yes/No --></td><td>NCC, pyramid</td></tr>
-          <!-- ...complete all provided images... -->
+          <tr><td>church.tif</td><td>(4, 25)</td><td>(-4, 58)</td><td>12.865</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>emir.tif</td><td>(24, 49)</td><td>(43, 61)</td><td>14.541</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>harvesters.tif</td><td>(17, 59)</td><td>(14, 124)</td><td>14.859</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>icon.tif</td><td>(17, 41)</td><td>(23, 89)</td><td>14.253</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>italil.tif</td><td>(21, 38)</td><td>(35, 77)</td><td>16.824</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>lastochikino.tif</td><td>(-2, -3)</td><td>(-9, 75)</td><td>18.258</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>lugano.tif</td><td>(-16, 41)</td><td>(-29, 93)</td><td>18.184</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>melons.tif</td><td>(11, 82)</td><td>(14, 178)</td><td>15.233</td><td><!-- mark Yes if ghosting persists --></td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>self_portrait.tif</td><td>(29, 79)</td><td>(37, 176)</td><td>15.815</td><td><!-- mark Yes if ghosting persists --></td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>siren.tif</td><td>(-6, 49)</td><td>(-24, 96)</td><td>15.543</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
+          <tr><td>three_generations.tif</td><td>(14, 52)</td><td>(11, 111)</td><td>15.279</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
         </tbody>
       </table>
 
@@ -131,7 +140,7 @@
       <details class="notes">
         <summary>Failure / Difficult Cases (required explanation if any)</summary>
         <p>
-          If any image failed with NCC/L2, I explain likely causes (thick borders, low texture, repeated patterns)
+          If any image failed with NCC, I explain likely causes (thick borders, low texture, repeated patterns)
           and attempted fixes (hard pre-crop, interior crop, slightly larger coarsest window).
         </p>
       </details>
@@ -139,7 +148,7 @@
 
     <!-- ===== Extra chosen images (still with NCC/L2 for rubric) ===== -->
     <section class="part" id="own">
-      <h2>Additional Images from the Collection (NCC / L2)</h2>
+      <h2>Additional Images from the Collection (NCC)</h2>
       <p>Tested a few extra plates with the same fixed parameters (no per-image tuning).</p>
 
       <table>
@@ -173,10 +182,8 @@
     <section class="part" id="bells">
       <h2>Bells &amp; Whistles (Not used for rubric scoring)</h2>
       <ul>
-        <li><b>Edge-based scoring:</b> ZNCC on Sobel / Gaussian gradient magnitude.</li>
+        <li><b>Edge-based scoring:</b> ZNCC on Sobel / Scharr / Gaussian gradient magnitude.</li>
         <li><b>Hard pre-crop:</b> automatic plate-border trimming.</li>
-        <li><b>Center-weighted NCC:</b> Gaussian weighting to de-emphasize borders.</li>
-        <li><b>Full-res local refine:</b> ±2 pixel refinement after the pyramid.</li>
       </ul>
 
       <div class="figure-grid">
@@ -187,12 +194,12 @@
         </figure>
         <figure>
           <img src="assets/bw_after_melons.png" alt="melons after (extras)">
-          <figcaption>After — edges + larger coarsest window + refine</figcaption>
+          <figcaption>After — edges + larger coarsest window</figcaption>
         </figure>
       </div>
 
       <p class="notes">
-        Per the rubric, I still document NCC/L2 results above. These enhancements are for quality and speed.
+        Per the rubric, I still document NCC results above. These enhancements are for better quality and speed.
       </p>
     </section>
 
@@ -201,7 +208,7 @@
       <h2>Notes &amp; Runtime</h2>
       <ul>
         <li>Parameters are fixed across images (no per-image hand tuning).</li>
-        <li>Typical runtime: &lt; 1 minute per large image with the pyramid (laptop).</li>
+        <li>Typical runtime: &lt; 20 seconds per large image.</li>
         <li>All outputs on this page are compressed (JPG/PNG). <strong>No TIFF uploads.</strong></li>
       </ul>
     </section>
