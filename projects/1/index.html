@@ -278,16 +278,70 @@
         </div>
     </section>
 
-    <!-- ===== Notes / Runtime ===== -->
-    <section class="section" id="notes">
+    <!-- ===== Edge-Based Scoring (Sobel) ===== -->
+    <section class="section" id="edges">
       <div class="container">
         <div class="prose">
-          <h2>Notes &amp; Runtime</h2>
-          <ul>
-            <li>Parameters are fixed across images (no per-image hand tuning).</li>
-            <li>Typical runtime: &lt; 20 seconds per large image.</li>
-            <li>All outputs on this page are compressed (JPG/PNG). <strong>No TIFF uploads.</strong></li>
-          </ul>
+          <h2>Edge-Based Scoring (Sobel)</h2>
+          <p>
+            Brightness and saturation differ strongly across Emir’s channels (deep reds/blues), so raw-intensity NCC can
+            correlate on <em>color</em> rather than <em>structure</em>. Repeating fabric motifs also create near-duplicate patches,
+            yielding false peaks. Evaluating <strong>ZNCC on Sobel edge magnitude</strong> emphasizes shared boundaries and is far
+            less sensitive to per-channel brightness/hue, which tightens alignment and removes color fringing.
+          </p>
+
+          <h3>Emir: alignment comparison</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>G → B (dx, dy)</th>
+                  <th>R → B (dx, dy)</th>
+                  <th>Runtime (s)</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>NCC on intensity (pyramid)</td>
+                  <td>(24, 49)</td>
+                  <td>(43, 61)</td>
+                  <td>14.541</td>
+                  <td>Baseline; visible color fringing on robe trim</td>
+                </tr>
+                <tr>
+                  <td>ZNCC on Sobel edges (pyramid)</td>
+                  <td>(24, 49)</td>
+                  <td>(40, 107)</td>
+                  <td>18.596</td>
+                  <td>Sharper edges; reduced false matches</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Before/after images -->
+        <div class="full-bleed">
+          <div class="figure-grid">
+            <figure>
+              <img src="assets/pyramid/emir.jpg" alt="emir — NCC on intensity (before)" loading="lazy" decoding="async">
+              <figcaption>Before — NCC on raw intensity (pyramid)</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/edges/emir.jpg" alt="emir — ZNCC on Sobel edges (after)" loading="lazy" decoding="async">
+              <figcaption>After — ZNCC on Sobel edge magnitude (pyramid)</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="prose">
+          <p class="notes">
+            Why it helps: edge magnitude is largely invariant to per-channel brightness/saturation, so similarity peaks align on
+            structural contours shared across channels (garment seams, facial outlines, jewelry). This reduces rainbow halos and
+            stabilizes coarse-to-fine search.
+          </p>
         </div>
       </div>
     </section>
