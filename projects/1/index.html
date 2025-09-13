@@ -36,8 +36,7 @@
               <b>Single-scale baseline:</b>
               <p>For small JPGs, I implemented an exhaustive integer search within a fixed
                 window (e.g., ±15 pixels) using Zero-mean Normalized Cross-Correlation
-                (ZNCC). This works well enough for low-resolution images but is too slow
-                and limited for larger .tif files.</p>
+                (ZNCC). <strong>Normalized Cross-Correlation (NCC)</strong> is a similarity metric that compares two image patches after subtracting their mean and scaling by their variance. This makes it robust to brightness differences between channels and ensures alignment is driven by structural similarity rather than raw intensity values. This single-scale approach works well enough for low-resolution images but is too slow and limited for larger .tif files.</p>
             </li>
             <li>
               <b>Image preprocessing &amp; cropping:</b>
@@ -54,7 +53,7 @@
             <li>
               <b>Edge detection:</b>
               <p>To mitigate rainbow ghosting in textured or low-contrast regions, I compute ZNCC on edge maps
-                (Sobel, Scharr, or Gaussian gradient magnitude) instead of raw intensity.</p>
+                (Sobel, Scharr, or Gaussian gradient magnitude) instead of raw intensity. <strong>Edge-based ZNCC</strong> applies Normalized Cross-Correlation to edge magnitude maps (e.g., from Sobel filters) instead of raw intensities. This emphasizes structural boundaries that are consistent across channels, reducing sensitivity to brightness, saturation, and repeated textures.</p>
             </li>
           </ol>
 
