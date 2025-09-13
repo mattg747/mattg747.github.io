@@ -90,17 +90,38 @@
                   <th>Metric</th>
                   <th>G → B (dx, dy)</th>
                   <th>R → B (dx, dy)</th>
+                  <th>Runtime (s)</th>
                   <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td>cathedral.jpg</td><td>NCC</td><td>(2, 5)</td><td>(3, 12)</td><td>clean</td></tr>
-                <tr><td>monastery.jpg</td><td>NCC</td><td>(2, -3)</td><td>(2, 3)</td><td>clean</td></tr>
-                <tr><td>tobolsk.jpg</td><td>NCC</td><td>(3, 3)</td><td>(3, 6)</td><td>clean</td></tr>
+                <tr>
+                  <td>cathedral.jpg</td>
+                  <td>NCC</td>
+                  <td>(2, 5)</td>
+                  <td>(3, 12)</td>
+                  <td>0.713</td>
+                  <td>clean</td>
+                </tr>
+                <tr>
+                  <td>monastery.jpg</td>
+                  <td>NCC</td>
+                  <td>(2, -3)</td>
+                  <td>(2, 3)</td>
+                  <td>0.675</td>
+                  <td>clean</td>
+                </tr>
+                <tr>
+                  <td>tobolsk.jpg</td>
+                  <td>NCC</td>
+                  <td>(3, 3)</td>
+                  <td>(3, 6)</td>
+                  <td>0.685</td>
+                  <td>clean</td>
+                </tr>
               </tbody>
             </table>
           </div>
-        </div>
 
         <div class="full-bleed">
           <div class="figure-grid">
@@ -204,14 +225,34 @@
               <thead>
                 <tr>
                   <th>Image</th>
-                  <th>G → B</th>
-                  <th>R → B</th>
+                  <th>G → B (dx, dy)</th>
+                  <th>R → B (dx, dy)</th>
+                  <th>Runtime (s)</th>
                   <th>Method</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td>melons.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>NCC, pyramid</td></tr>
-                <tr><td>self_portrait.tif</td><td>(dx, dy)</td><td>(dx, dy)</td><td>NCC, pyramid</td></tr>
+                <tr>
+                  <td>forest.tif</td>
+                  <td>(-31, 37)</td>
+                  <td>(7, 97)</td>
+                  <td>14.743</td>
+                  <td>NCC, pyramid</td>
+                </tr>
+                <tr>
+                  <td>religious.tif</td>
+                  <td>(3, 29)</td>
+                  <td>(7, 69)</td>
+                  <td>14.202</td>
+                  <td>NCC, pyramid</td>
+                </tr>
+                <tr>
+                  <td>zakat.tif</td>
+                  <td>(-41, 75)</td>
+                  <td>(-68, 114)</td>
+                  <td>15.780</td>
+                  <td>NCC, pyramid</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -220,12 +261,16 @@
         <div class="full-bleed">
           <div class="figure-grid">
             <figure>
-              <img src="outputs/extra/melons.jpg" alt="melons (NCC)">
-              <figcaption>melons — NCC, pyramid</figcaption>
+              <img src="assets/extras/forest.jpg" alt="forest (NCC)">
+              <figcaption>forest — NCC, pyramid</figcaption>
             </figure>
             <figure>
-              <img src="outputs/extra/self_portrait.jpg" alt="self-portrait (NCC)">
-              <figcaption>self-portrait — NCC, pyramid</figcaption>
+              <img src="assets/extras/religious.jpg" alt="religious painting (NCC)">
+              <figcaption>religious painting — NCC, pyramid</figcaption>
+            </figure>
+            <figure></figure>
+              <img src="assets/extras/zakat.jpg" alt="zakat (NCC)">
+              <figcaption>zakat — NCC, pyramid</figcaption>
             </figure>
           </div>
         </div>
