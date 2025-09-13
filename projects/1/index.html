@@ -14,9 +14,16 @@
 
   <main>
 
-    <!-- ===== Overview & Approach ===== -->
-    <section class="section" id="overview">
-      <div class="container">
+    <!-- ===== Overview (Hero split) ===== -->
+    <section class="section hero" id="overview">
+      <div class="hero-grid">
+        <figure class="hero-figure">
+          <img src="assets/hero/trees_3_neg.jpg"
+               alt="Three vertically stacked monochrome exposures of a forest path (Prokudin-Gorskii glass plate)"
+               loading="eager" decoding="async">
+          <figcaption>Source plate with three filtered exposures (B, G, R) captured on glass.</figcaption>
+        </figure>
+
         <div class="prose">
           <h2>Overview</h2>
           <p>
@@ -27,47 +34,27 @@
           <ol>
             <li>
               <b>Single-scale baseline:</b>
-              <p>
-                For small JPGs, I implemented an exhaustive integer search within a fixed
+              <p>For small JPGs, I implemented an exhaustive integer search within a fixed
                 window (e.g., ±15 pixels) using Zero-mean Normalized Cross-Correlation
                 (ZNCC). This works well enough for low-resolution images but is too slow
-                and limited for larger .tif files.
-              </p>
+                and limited for larger .tif files.</p>
             </li>
-
             <li>
               <b>Image preprocessing &amp; cropping:</b>
-              <p>
-                Each plate is read, converted to <code>float64</code> in [0,1], and split
-                into B, G, and R channels. I applied a <em>hard pre-crop</em> (to remove
-                thick borders), ensuring the wraparound edges and black borders
-                don’t bias the metrics. Then, I also applied an interior crop when scoring
-                with ZNCC to avoid wraparound artifacts caused by <code>np.roll</code> (and to utilize the
-                center of the image, which is most reliable due to vignetting, chromatic aberration, etc.)
-              </p>
+              <p>Each plate is read, converted to <code>float64</code> in [0,1], and split
+                into B, G, and R channels. I applied a <em>hard pre-crop</em> to remove thick
+                borders, plus an interior crop during scoring to avoid wraparound artifacts from <code>np.roll</code>.</p>
             </li>
-
             <li>
               <b>Pyramid (multi-scale) approach:</b>
-              <p>
-                For high-resolution .tif files, I downscale the channels repeatedly by 0.5
-                until the smallest side is ~250 px. Alignment starts at the coarsest level
-                with a slightly larger search window (10x10 pixels), then at each finer level the shift is
-                doubled and refined locally (5x5 pixels). This coarse-to-fine refinement
-                allows handling of large displacements efficiently while keeping runtime
-                reasonable.
-              </p>
+              <p>For high-resolution .tif files, I downscale the channels repeatedly by 0.5
+                until the smallest side is ~250 px. Alignment starts at the coarsest level with a larger window,
+                then refines at each finer level.</p>
             </li>
-
             <li>
               <b>Edge detection:</b>
-              <p>
-                To mitigate rainbow ghosting in textured or low-contrast regions, I added
-                an edge-based mode where ZNCC is computed not on raw intensity but on edge
-                maps. I implemented Sobel, Scharr, and Gaussian gradient magnitude. This
-                makes alignment more robust, especially on images with strong borders or
-                repeated patterns (e.g., melons).
-              </p>
+              <p>To mitigate rainbow ghosting in textured or low-contrast regions, I compute ZNCC on edge maps
+                (Sobel, Scharr, or Gaussian gradient magnitude) instead of raw intensity.</p>
             </li>
           </ol>
 
@@ -89,9 +76,8 @@
           <h3>Approach</h3>
           <p>
             Exhaustive search over ±window on the original resolution using <strong>NCC</strong>.
-            Scores are computed on an interior crop (cutting off 10% on each side, so essentially about 64% of the image) 
-            to avoid border artifacts. Offsets are reported as <code>(dx, dy)</code>
-            with +dx = right and +dy = down.
+            Scores are computed on an interior crop (cutting off 10% on each side) to avoid border artifacts.
+            Offsets are reported as <code>(dx, dy)</code> with +dx = right and +dy = down.
           </p>
 
           <h3>Results (3 provided JPGs)</h3>
@@ -116,7 +102,6 @@
           </div>
         </div>
 
-        <!-- Full-bleed grid (outside .prose to span wider) -->
         <div class="full-bleed">
           <div class="figure-grid">
             <figure><img src="assets/single_scale/cathedral.jpg" alt="cathedral (single-scale)"><figcaption>cathedral — single-scale (NCC)</figcaption></figure>
@@ -136,15 +121,13 @@
           <h3>Step-by-step</h3>
           <ol>
             <li>Build pyramid by downscaling by 0.5 until min side ≈ 250 px.</li>
-            <li>At the coarsest level, search a slightly larger window (e.g., ±10) with <strong>NCC</strong>; record best (dx, dy).</li>
-            <li>Move one level finer: double (dx, dy) and refine in a small window (±5).</li>
-            <li>Repeat until full resolution; apply final shifts to compose RGB.</li>
+            <li>Coarsest level: search ±10 with <strong>NCC</strong>, record (dx, dy).</li>
+            <li>At each finer level: double the shift and refine in ±5.</li>
+            <li>At full resolution: apply final shifts to compose RGB.</li>
           </ol>
 
           <h3>Results on Full Set (NCC)</h3>
-          <p>
-            <strong>Alignment defects:</strong> <span class="tag">1 / 14</span>
-          </p>
+          <p><strong>Alignment defects:</strong> <span class="tag">1 / 14</span></p>
 
           <div class="table-wrap">
             <table>
@@ -175,7 +158,7 @@
           </div>
         </div>
 
-        <!-- === All pyramid outputs (right after table) === -->
+        <!-- All pyramid outputs -->
         <div class="full-bleed">
           <div class="figure-grid">
             <figure><img src="assets/pyramid/church.jpg" alt="church (pyramid NCC)"><figcaption>church — pyramid (NCC)</figcaption></figure>
@@ -192,27 +175,24 @@
           </div>
         </div>
 
-        <!-- === Difficult / Failure Cases (permanent prose section) === -->
         <div class="prose">
           <h3>Difficult / Failure Cases</h3>
           <p>
             <b>emir.tif (challenging without edge detection):</b> The Emir’s portrait has strong, saturated reds and dark blues in
-            the robe and background. These channels differ substantially in brightness and contrast, so raw-intensity NCC tends
-            to maximize correlation on <em>color</em> rather than <em>structure</em>. In addition, the fabric’s ornate, repeating
-            patterns produce many near-duplicate local patches. Together, these effects create false peaks in the NCC surface and
-            encourage small but visible misalignments (color fringing), especially around the robe trim and high-contrast borders.
+            the robe and background. These channels differ in brightness and contrast, so raw-intensity NCC tends to maximize
+            correlation on <em>color</em> rather than <em>structure</em>. The fabric’s ornate, repeating patterns create many
+            near-duplicate patches, leading to false peaks and small but visible misalignments around the robe trim and borders.
           </p>
           <p>
-            <b>Mitigation:</b> using Sobel/Scharr edge maps for scoring makes the metric far less sensitive to per-channel
-            brightness/saturation differences and repetitive color textures. Combined with a hard pre-crop and a slightly larger
-            coarse-level search window in the pyramid, the edge-based NCC reliably snaps the channels to structural boundaries
-            (seams, facial contours, and jewelry edges), removing the rainbow halo.
+            <b>Mitigation:</b> scoring on Sobel/Scharr edge maps reduces sensitivity to per-channel brightness/saturation and to
+            repetitive color textures. With a hard pre-crop and a slightly larger coarse search window, edge-based NCC snaps
+            channels to structural boundaries (seams, contours, jewelry edges), removing the rainbow halo.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- ===== Extra chosen images ===== -->
+    <!-- ===== Extras ===== -->
     <section class="section" id="own">
       <div class="container">
         <div class="prose">
@@ -248,38 +228,6 @@
               <figcaption>self-portrait — NCC, pyramid</figcaption>
             </figure>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== Bells & Whistles ===== -->
-    <section class="section" id="bells">
-      <div class="container">
-        <div class="prose">
-          <h2>Bells &amp; Whistles (Not used for rubric scoring)</h2>
-          <ul>
-            <li><b>Edge-based scoring:</b> ZNCC on Sobel / Scharr / Gaussian gradient magnitude.</li>
-            <li><b>Hard pre-crop:</b> automatic plate-border trimming.</li>
-          </ul>
-        </div>
-
-        <div class="full-bleed">
-          <div class="figure-grid">
-            <figure>
-              <img src="assets/bw_before_melons.png" alt="melons before (NCC only)">
-              <figcaption>Before — NCC only (notice residual fringe)</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/bw_after_melons.png" alt="melons after (extras)">
-              <figcaption>After — edges + larger coarsest window</figcaption>
-            </figure>
-          </div>
-        </div>
-
-        <div class="prose">
-          <p class="notes">
-            Per the rubric, I still document NCC results above. These enhancements are for better quality and speed.
-          </p>
         </div>
       </div>
     </section>

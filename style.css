@@ -13,6 +13,12 @@
   --panel: #1e293b;
   --panel-border: #273346;
   --link: #9fb4ff;
+
+  /* Global image caps */
+  --img-max-h-mobile: 55vh;
+  --img-max-h-desktop: 72vh;
+  --hero-max-h-mobile: 48vh;
+  --hero-max-h-desktop: 56vh;
 }
 
 /* =========================
@@ -32,7 +38,7 @@ body{
 a{ color:inherit; text-decoration:none; }
 a:hover{ text-decoration:underline; }
 
-/* A consistent vertical rhythm */
+/* Vertical rhythm */
 :where(h1,h2,h3,h4,p,ul,ol,pre,blockquote,table,figure){ margin:0 0 .9rem; }
 :where(ul,ol){ padding-left:1.25rem; }
 
@@ -68,23 +74,20 @@ footer{
 /* =========================
    Layout primitives
 ========================= */
-/* Outer section centers the whole block and gives padding */
 .section{
   border-top:1px solid var(--border);
   padding:2rem 1rem;
 }
-.container{               /* centers to section width */
+.container{
   max-width:var(--section-width);
   margin:0 auto;
 }
 
-/* The magic: .prose is the shared text column for ALL copy + headings */
+/* Shared text column */
 .prose{
   max-width:var(--content-width);
   margin:0 auto;
 }
-
-/* Ensure headings + paragraphs are locked to the same column */
 .prose :where(h2,h3,h4,p,ul,ol,pre,blockquote,table){ max-width:100%; }
 
 /* Headings */
@@ -105,7 +108,6 @@ footer{
 /* =========================
    Utilities
 ========================= */
-/* Full-bleed block that ignores the narrow text column */
 .full-bleed{
   margin-left:calc(50% - min(50%, var(--section-width)/2));
   margin-right:calc(50% - min(50%, var(--section-width)/2));
@@ -115,12 +117,10 @@ footer{
   margin-left:auto;
   margin-right:auto;
 }
-
-/* Optional tighter spacing lists */
 .list-tight li{ margin:.3rem 0; }
 
 /* =========================
-   Cards grid (landing page)
+   Cards grid
 ========================= */
 .projects{
   display:grid;
@@ -151,10 +151,10 @@ footer{
 /* =========================
    Tables (scroll-safe)
 ========================= */
-.table-wrap{              /* keeps tables aligned with text and scrollable on small screens */
+.table-wrap{
   max-width:var(--content-width);
   margin:0 auto .9rem;
-  overflow:auto;          /* horizontal scroll if needed */
+  overflow:auto;
 }
 .prose table{
   width:100%;
@@ -163,7 +163,7 @@ footer{
   border:1px solid var(--border);
   border-radius:10px;
   overflow:hidden;
-  min-width:640px;        /* prevents cramped layouts; remove if not needed */
+  min-width:640px;
 }
 .prose thead th{
   text-align:left;
@@ -199,7 +199,28 @@ figure{
   border-radius:12px;
   overflow:hidden;
 }
-figure img{ display:block; width:100%; height:auto; }
+
+/* Global image bounds */
+.prose img,
+.figure-grid img,
+.media img,
+figure img{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  max-height:var(--img-max-h-mobile);
+  object-fit:contain;
+}
+@media (min-width:800px){
+  .prose img,
+  .figure-grid img,
+  .media img,
+  figure img{
+    max-height:var(--img-max-h-desktop);
+  }
+}
+
 figcaption{
   padding:.6rem .8rem;
   font-size:.9rem;
@@ -207,17 +228,13 @@ figcaption{
   text-align:center;
 }
 
-/* Centered media within prose */
+/* Centered media */
 .media{
   text-align:center;
   background:transparent;
   border:none;
 }
-.media img{
-  max-width:800px;
-  width:100%;
-  border-radius:12px;
-}
+.media img{ border-radius:12px; }
 .media figcaption{
   color:#cfd6e6;
   margin-top:.5rem;
@@ -233,3 +250,58 @@ figcaption{
 
 .steps{ margin:.75rem 0 0 1rem; color:var(--muted); }
 .steps li{ margin:.3rem 0; }
+
+/* =========================
+   Hero split (image ⟷ text)
+========================= */
+.hero{ padding-top:1.25rem; }
+.hero-grid{
+  display:grid;
+  gap:1.25rem;
+  align-items:start;
+  max-width:var(--section-width);
+  margin:0 auto;
+}
+@media (min-width:900px){
+  .hero-grid{
+    grid-template-columns:1fr 1fr;
+    align-items:stretch; /* columns equal height */
+  }
+}
+.hero-figure{
+  margin:0;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:12px;
+  overflow:hidden;
+}
+@media (min-width:900px){
+  .hero-figure{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+  }
+}
+.hero-figure img{
+  width:100%;
+  height:auto;
+  object-fit:contain;            /* show the entire plate on mobile */
+  max-height:var(--hero-max-h-mobile);
+}
+@media (min-width:900px){
+  .hero-figure img{
+    flex:1 1 auto;
+    height:100%;                 /* fill the column height on desktop */
+    max-height:none;             /* override mobile cap */
+    object-fit:contain;          /* no cropping on desktop */
+  }
+}
+.hero-figure figcaption{
+  padding:.55rem .75rem;
+  font-size:.85rem;
+  color:#cfd6e6;
+  text-align:center;
+  background:rgba(0,0,0,.15);
+  border-top:1px solid var(--panel-border);
+}
+.hero .prose{ max-width:66ch; }
