@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 2: Fun with Filters & Frequencies</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Project 2: Fun with Filters & Frequencies</h1>
+    <nav><a href="/home.html">← Back to Portfolio</a></nav>
+  </header>
+
+  <main>
+
+    <!-- ===== Overview ===== -->
+    <section class="section hero" id="overview">
+      <div class="hero-grid">
+        <figure class="hero-figure">
+          <img src="part1/hero_edges.png" alt="Gradient magnitude edges of the cameraman" loading="eager" decoding="async">
+          <figcaption>Edges via derivative filters (finite difference &amp; DoG).</figcaption>
+        </figure>
+
+        <div class="prose">
+          <h2>Overview</h2>
+          <p>
+            This project explores 2D filtering in the spatial and frequency domains. In <b>Part 1</b> I
+            implement convolution from scratch, visualize finite-difference derivatives, and compare them with
+            derivative-of-Gaussian (DoG) filtering. In <b>Part 2</b> I apply these ideas: unsharp masking for
+            sharpening, hybrid images that change with viewing distance, and multiresolution (Laplacian/Gaussian
+            stack) blending for seamless composites.
+          </p>
+
+          <ul>
+            <li><b>Languages / libs:</b> Python, NumPy, SciPy, OpenCV, Matplotlib</li>
+            <li><b>Key topics:</b> convolution, padding, finite differences, Gaussian blur, DoG, unsharp mask,
+              Fourier analysis, Gaussian/Laplacian stacks, multi-resolution blending</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Part 1.1: Convolution from Scratch ===== -->
+    <section class="section" id="p1-1">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 1.1 — Convolutions from Scratch</h2>
+          <p>
+            I implemented 2D convolution with <em>four nested loops</em> (reference), then
+            a <em>two-loop</em> version using vectorized row/column ops, plus zero-padding.
+            I validated results against <code>scipy.signal.convolve2d</code> and discussed boundary handling
+            (zero, reflect) and runtime tradeoffs.
+          </p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Op</th><th>Implementation</th><th>Padding</th><th>PSNR vs SciPy</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>9×9 Box</td><td>two-loop NumPy</td><td>zeros</td><td>∞ (identical)</td><td>matches SciPy</td></tr>
+              <tr><td>Dx / Dy</td><td>two-loop NumPy</td><td>zeros</td><td>∞ (identical)</td><td>see Part 1.2</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="full-bleed">
+          <div class="figure-grid">
+            <figure>
+              <img src="part1/selfie_box_numpy.png" alt="Selfie convolved with 9x9 box (my conv)">
+              <figcaption>Selfie — 9×9 box (my convolution)</figcaption>
+            </figure>
+            <figure>
+              <img src="part1/selfie_box_scipy.png" alt="Selfie convolved with 9x9 box (SciPy)">
+              <figcaption>Selfie — 9×9 box (SciPy convolve2d)</figcaption>
+            </figure>
+            <figure>
+              <img src="part1/selfie_dx.png" alt="Selfie convolved with Dx">
+              <figcaption>Selfie — finite difference <code>D<sub>x</sub></code></figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Part 1.2: Finite Difference ===== -->
+    <section class="section" id="p1-2">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 1.2 — Finite Difference Operator</h2>
+          <p>Derivatives computed with <code>D<sub>x</sub> = [[-1, 1]]</code> and
+             <code>D<sub>y</sub> = [[-1],[1]]</code>. The gradient magnitude
+             <code>‖∇I‖ = √(I<sub>x</sub><sup>2</sup> + I<sub>y</sub><sup>2</sup>)</code> is
+             thresholded to produce binary edges (threshold chosen by visual tuning).</p>
+        </div>
+
+        <div class="figure-grid">
+          <figure><img src="part1/cameraman_dx.png" alt="Ix"><figcaption>Cameraman — <code>I<sub>x</sub></code></figcaption></figure>
+          <figure><img src="part1/cameraman_dy.png" alt="Iy"><figcaption>Cameraman — <code>I<sub>y</sub></code></figcaption></figure>
+          <figure><img src="part1/cameraman_gradmag.png" alt="grad mag"><figcaption>Gradient magnitude</figcaption></figure>
+          <figure><img src="part1/cameraman_edges.png" alt="edges"><figcaption>Binarized edges</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Part 1.3: DoG ===== -->
+    <section class="section" id="p1-3">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 1.3 — Derivative of Gaussian (DoG)</h2>
+          <p>
+            Smoothing with a Gaussian reduces noise before differentiation. I show results from
+            (i) blur → finite differences and (ii) single DoG filters constructed by convolving
+            a Gaussian with <code>D<sub>x</sub>, D<sub>y</sub></code>. I also visualize the DoG
+            kernels as images.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure><img src="part1/cameraman_blur.png" alt="blur"><figcaption>Gaussian blur</figcaption></figure>
+          <figure><img src="part1/cameraman_dogx.png" alt="DoGx"><figcaption>DoG (x)</figcaption></figure>
+          <figure><img src="part1/cameraman_dogy.png" alt="DoGy"><figcaption>DoG (y)</figcaption></figure>
+          <figure><img src="part1/cameraman_orient_hsv.png" alt="HSV orientation"><figcaption>Gradient orientation (HSV)</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Part 2.1: Unsharp Masking ===== -->
+    <section class="section" id="p2-1">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2.1 — Image “Sharpening” (Unsharp Mask)</h2>
+          <p>
+            Unsharp masking adds scaled high frequencies back to the image:
+            <code>I<sub>sharp</sub> = I + α (I − G∗I)</code>. I also construct a single kernel
+            <code>K = (1+α)δ − αG</code> to realize the same effect via one convolution.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure><img src="part2/taj_blur.png" alt="Taj blurred"><figcaption>Taj — blurred (low-pass)</figcaption></figure>
+          <figure><img src="part2/taj_high.png" alt="Taj high-freq"><figcaption>Taj — extracted high-freq</figcaption></figure>
+          <figure><img src="part2/taj_sharp.png" alt="Taj sharpened"><figcaption>Taj — sharpened</figcaption></figure>
+          <figure><img src="part2/sharp_sweep.png" alt="alpha sweep"><figcaption>Effect of α (amount) sweep</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Part 2.2: Hybrid Images ===== -->
+    <section class="section" id="p2-2">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2.2 — Hybrid Images</h2>
+          <p>
+            I low-pass one image and high-pass another, then sum. Up close, high frequencies dominate;
+            from afar, only low frequencies remain. I include Derek+Nutmeg and my own pair.
+          </p>
+        </div>
+
+        <!-- Derek + Nutmeg (full process with FFTs) -->
+        <div class="figure-grid">
+          <figure><img src="part2/hyb_A_input.png" alt="Low-pass source A"><figcaption>Low-pass source A</figcaption></figure>
+          <figure><img src="part2/hyb_B_input.png" alt="High-pass source B"><figcaption>High-pass source B</figcaption></figure>
+          <figure><img src="part2/hyb_A_low_s8.0.png" alt="A low"><figcaption>A after Gaussian (low-pass)</figcaption></figure>
+          <figure><img src="part2/hyb_B_high_vis_s4.0.png" alt="B high"><figcaption>B high-pass (visualized)</figcaption></figure>
+          <figure><img src="part2/hyb_result_sA8.0_sB4.0.png" alt="Hybrid"><figcaption>Hybrid result</figcaption></figure>
+        </div>
+
+        <div class="figure-grid">
+          <figure><img src="part2/fft_A.png" alt="FFT A"><figcaption>log|FFT(A)|</figcaption></figure>
+          <figure><img src="part2/fft_B.png" alt="FFT B"><figcaption>log|FFT(B)|</figcaption></figure>
+          <figure><img src="part2/fft_A_low.png" alt="FFT A_low"><figcaption>log|FFT(A_low)|</figcaption></figure>
+          <figure><img src="part2/fft_B_high.png" alt="FFT B_high"><figcaption>log|FFT(B_high)|</figcaption></figure>
+          <figure><img src="part2/fft_H.png" alt="FFT hybrid"><figcaption>log|FFT(Hybrid)|</figcaption></figure>
+        </div>
+
+        <!-- Your second hybrid (e.g., Anakin + Vader) -->
+        <div class="figure-grid">
+          <figure><img src="part2/hyb2_A.png" alt="Hybrid 2 A"><figcaption>Hybrid #2 — source A</figcaption></figure>
+          <figure><img src="part2/hyb2_B.png" alt="Hybrid 2 B"><figcaption>Hybrid #2 — source B</figcaption></figure>
+          <figure><img src="part2/hyb2_result.png" alt="Hybrid 2 result"><figcaption>Hybrid #2 — result</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Part 2.3: Gaussian & Laplacian Stacks ===== -->
+    <section class="section" id="p2-3">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2.3 — Gaussian &amp; Laplacian Stacks</h2>
+          <p>
+            I build same-size <em>stacks</em> (no downsampling): repeated Gaussian blurs form the Gaussian stack;
+            Laplacian levels are differences between successive Gaussian levels. These prep for multires blending.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure><img src="part2/stack_gauss_lvl0.png" alt="G0"><figcaption>Gaussian L0</figcaption></figure>
+          <figure><img src="part2/stack_gauss_lvl3.png" alt="G3"><figcaption>Gaussian L3</figcaption></figure>
+          <figure><img src="part2/stack_lap_lvl0.png" alt="L0"><figcaption>Laplacian L0</figcaption></figure>
+          <figure><img src="part2/stack_lap_lvl3.png" alt="L3"><figcaption>Laplacian L3</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Part 2.4: Multiresolution Blending ===== -->
+    <section class="section" id="p2-4">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2.4 — Multiresolution Blending (“Oraple” + custom)</h2>
+          <p>
+            Using Gaussian stacks for the mask and Laplacian stacks for the images, I blend
+            across frequency bands to hide seams.
+          </p>
+        </div>
+
+        <!-- Vertical seam: Batman vs Joker -->
+        <div class="figure-grid">
+          <figure><img src="part2/bj_batman.png" alt="Batman"><figcaption>Batman (left)</figcaption></figure>
+          <figure><img src="part2/bj_joker.png" alt="Joker"><figcaption>Joker (right)</figcaption></figure>
+          <figure><img src="part2/mask_vertical_batman_joker.png" alt="mask"><figcaption>Vertical mask (softened)</figcaption></figure>
+          <figure><img src="part2/bj_vertical_blend.png" alt="blend"><figcaption>Blended result</figcaption></figure>
+        </div>
+
+        <!-- Irregular mask: Lamborghinis -->
+        <div class="prose">
+          <h3>Lamborghini Blend (irregular, jagged mask)</h3>
+          <p>
+            I aligned the mask in gold’s frame and applied the same similarity transform to the blue image.
+            Below are the two required outputs for the report.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="part2/lambo_simple_blend_whiteKeepsBLUE.png" alt="Simple alpha blend (white keeps BLUE)">
+            <figcaption>Simple alpha blend — white keeps <b>BLUE</b></figcaption>
+          </figure>
+          <figure>
+            <img src="part2/lambo_jagged_blend_whiteKeepsBLUE.png" alt="Multires blend (white keeps BLUE)">
+            <figcaption>Multiresolution blend — white keeps <b>BLUE</b></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Takeaways ===== -->
+    <section class="section" id="takeaways">
+      <div class="container">
+        <div class="prose">
+          <h2>What I Learned</h2>
+          <ul>
+            <li>Convolution details (padding, kernel flipping) matter; vectorization gives big speedups.</li>
+            <li>DoG reduces noise amplification compared to raw finite differences; orientations are fun to visualize in HSV.</li>
+            <li>Unsharp masking is just “add the highs” — clean to express as a single kernel.</li>
+            <li>Hybrid images make the frequency split (low vs high) perceptually obvious.</li>
+            <li>Laplacian/Gaussian stacks let you “hide” seams by blending per band; mask alignment is critical.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>© <span id="y"></span> Matthew Gerardi — CS180 Project 2</p>
+  </footer>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

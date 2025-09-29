@@ -3,352 +3,504 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Project 1: Prokudin-Gorskii Colorization</title>
+  <title>Project 2: Fun with Filters & Frequencies</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header>
-    <h1>Project 1: Prokudin-Gorskii Colorization</h1>
+    <h1>Project 2: Fun with Filters & Frequencies</h1>
     <nav><a href="/home.html">← Back to Portfolio</a></nav>
   </header>
 
   <main>
 
-    <!-- ===== Overview (Hero split) ===== -->
+    <!-- ===== Overview / Hero ===== -->
     <section class="section hero" id="overview">
       <div class="hero-grid">
         <figure class="hero-figure">
-          <img src="assets/hero/trees_3_neg.jpg"
-               alt="Three vertically stacked monochrome exposures of a forest path (Prokudin-Gorskii glass plate)"
+          <img src="assets/part2/2_4_pairs/bj_vertical_blend.png"
+               alt="Batman and Joker multiresolution blend with a soft vertical seam"
                loading="eager" decoding="async">
-          <figcaption>Source plate with three filtered exposures (B, G, R) captured on glass.</figcaption>
+          <figcaption>Batman + Joker — multiresolution blend (soft vertical seam).</figcaption>
         </figure>
 
         <div class="prose">
           <h2>Overview</h2>
           <p>
-            In this project, I used digitized glass plates — taken by Prokudin-Gorskii in the early 1900s by using red, green, and blue filters for a total of three exposures for each photograph — to reconstruct color images through careful alignment of the three color channels. First, I split the glass plate scan into three sections to separate each color filter exposure. To align the images, the code searches over a small window (for my implementation, 15 pixels wide/tall) and evaluates how well the color channels match with Normalized Cross-Correlation. This kind of exhaustive search works well enough for .jpg files, but larger .tif files required a more efficient, image pyramid method (going from small, scaled-down, coarse/blurry images to the full-resolution starting image and shifting the alignment at each level) in order to run in a reasonable amount of time. Then, to improve accuracy even further, I implemented edge detection and used that as the feature space for scoring via NCC rather than simply RGB values.
+            In Part 1, I implement spatial filtering from scratch and compare finite differences to
+            derivative-of-Gaussian (DoG). In Part 2, I apply these tools to image sharpening, hybrid images,
+            and multi-resolution blending using Gaussian/Laplacian stacks.
           </p>
-
-          <h2>Method / Approach</h2>
-          <ol>
-            <li>
-              <b>Single-scale baseline:</b>
-              <p>For small JPGs, I implemented an exhaustive integer search within a fixed
-                window (e.g., ±15 pixels) using Zero-mean Normalized Cross-Correlation
-                (ZNCC). <strong>Normalized Cross-Correlation (NCC)</strong> is a similarity metric that compares two image patches after subtracting their mean and scaling by their variance. This makes it robust to brightness differences between channels and ensures alignment is driven by structural similarity rather than raw intensity values. This single-scale approach works well enough for low-resolution images but is too slow and limited for larger .tif files.</p>
-            </li>
-            <li>
-              <b>Image preprocessing &amp; cropping:</b>
-              <p>Each plate is read, converted to <code>float64</code> in [0,1], and split
-                into B, G, and R channels. I applied a <em>hard pre-crop</em> to remove thick
-                borders, plus an interior crop during scoring to avoid wraparound artifacts from <code>np.roll</code>.</p>
-            </li>
-            <li>
-              <b>Pyramid (multi-scale) approach:</b>
-              <p>For high-resolution .tif files, I downscale the channels repeatedly by 0.5
-                until the smallest side is ~250 px. Alignment starts at the coarsest level with a larger window,
-                then refines at each finer level.</p>
-            </li>
-            <li>
-              <b>Edge detection:</b>
-              <p>To mitigate rainbow ghosting in textured or low-contrast regions, I compute ZNCC on edge maps
-                (Sobel, Scharr, or Gaussian gradient magnitude) instead of raw intensity. <strong>Edge-based ZNCC</strong> applies Normalized Cross-Correlation to edge magnitude maps (e.g., from Sobel filters) instead of raw intensities. This emphasizes structural boundaries that are consistent across channels, reducing sensitivity to brightness, saturation, and repeated textures.</p>
-            </li>
-          </ol>
-
-          <h2 id="issues">Issues &amp; Fixes</h2>
           <ul>
-            <li><b>Rainbow ghosting:</b> reduced with stricter cropping and edge-based scoring.</li>
-            <li><b>Large shifts in TIFFs:</b> handled via coarse→fine image pyramid.</li>
+            <li><b>Stack:</b> Python, NumPy, SciPy, OpenCV, Matplotlib</li>
+            <li><b>Topics:</b> convolution, padding, finite differences, Gaussian/DoG, unsharp mask, FFT,
+              Gaussian &amp; Laplacian stacks, multiresolution blending</li>
           </ul>
         </div>
       </div>
     </section>
 
-    <!-- ===== Single-scale (required 3 JPGs) ===== -->
-    <section class="section" id="single-scale">
+    <!-- =========================
+         PART 1: Filters & Edges
+         ========================= -->
+    <!-- 1.1 Convolution from scratch -->
+    <section class="section" id="p1-1">
       <div class="container">
         <div class="prose">
-          <h2>Single-Scale Alignment</h2>
-
-          <h3>Approach</h3>
+          <h2>Part 1.1 — Convolutions from Scratch</h2>
           <p>
-            Exhaustive search over ±window on the original resolution using <strong>NCC</strong>.
-            Scores are computed on an interior crop (cutting off 10% on each side) to avoid border artifacts.
-            Offsets are reported as <code>(dx, dy)</code> with +dx = right and +dy = down.
+            I wrote 2D convolution using four loops (reference) and a faster two-loop vectorized version
+            (NumPy only). Padding is zero-filled. I validate against <code>scipy.signal.convolve2d</code>
+            and discuss boundary handling and runtime.
           </p>
+          <ul>
+            <li><b>Boundary:</b> zero padding; edges darken slightly vs reflect.</li>
+            <li><b>Runtime:</b> two-loop vectorized version is ~10–30× faster than four-loop on ~1MP images.</li>
+          </ul>
+        </div>
 
-          <h3>Results (3 provided JPGs)</h3>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>Metric</th>
-                  <th>G → B (dx, dy)</th>
-                  <th>R → B (dx, dy)</th>
-                  <th>Runtime (s)</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>cathedral.jpg</td>
-                  <td>NCC</td>
-                  <td>(2, 5)</td>
-                  <td>(3, 12)</td>
-                  <td>0.713</td>
-                  <td>clean</td>
-                </tr>
-                <tr>
-                  <td>monastery.jpg</td>
-                  <td>NCC</td>
-                  <td>(2, -3)</td>
-                  <td>(2, 3)</td>
-                  <td>0.675</td>
-                  <td>clean</td>
-                </tr>
-                <tr>
-                  <td>tobolsk.jpg</td>
-                  <td>NCC</td>
-                  <td>(3, 3)</td>
-                  <td>(3, 6)</td>
-                  <td>0.685</td>
-                  <td>clean</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-        <div class="full-bleed">
-          <div class="figure-grid">
-            <figure><img src="assets/single_scale/cathedral.jpg" alt="cathedral (single-scale)"><figcaption>cathedral — single-scale (NCC)</figcaption></figure>
-            <figure><img src="assets/single_scale/monastery.jpg" alt="monastery (single-scale)"><figcaption>monastery — single-scale (NCC)</figcaption></figure>
-            <figure><img src="assets/single_scale/tobolsk.jpg" alt="tobolsk (single-scale)"><figcaption>tobolsk — single-scale (NCC)</figcaption></figure>
-          </div>
+        <div class="figure-grid">
+          <figure><img src="assets/part1/1_1/selfie_box_2loop.png" alt="Selfie box (my conv)"><figcaption>9×9 box — my convolution</figcaption></figure>
+          <figure><img src="assets/part1/1_1/selfie_box_scipy.png" alt="Selfie box (SciPy)"><figcaption>9×9 box — SciPy <code>convolve2d</code></figcaption></figure>
+          <figure><img src="assets/part1/1_1/selfie_dx.png" alt="Dx on selfie"><figcaption><code>D<sub>x</sub></code> response (sanity check)</figcaption></figure>
         </div>
       </div>
     </section>
 
-    <!-- ===== Multi-scale pyramid (NCC) ===== -->
-    <section class="section" id="pyramid">
+    <!-- 1.2 Finite differences -->
+    <section class="section" id="p1-2">
       <div class="container">
         <div class="prose">
-          <h2>Multi-Scale Pyramid Alignment (with NCC)</h2>
-
-          <h3>Step-by-step</h3>
-          <ol>
-            <li>Build pyramid by downscaling by 0.5 until min side ≈ 250 px.</li>
-            <li>Coarsest level: search ±10 with <strong>NCC</strong>, record (dx, dy).</li>
-            <li>At each finer level: double the shift and refine in ±5.</li>
-            <li>At full resolution: apply final shifts to compose RGB.</li>
-          </ol>
-
-          <h3>Results on Full Set (NCC)</h3>
-          <p><strong>Alignment defects:</strong> <span class="tag">1 / 14</span></p>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>G → B (dx, dy)</th>
-                  <th>R → B (dx, dy)</th>
-                  <th>Runtime (s)</th>
-                  <th>Defect?</th>
-                  <th>Notes (NCC)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>church.tif</td><td>(4, 25)</td><td>(-4, 58)</td><td>12.865</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>emir.tif</td><td>(24, 49)</td><td>(43, 61)</td><td>14.541</td><td>Yes</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>harvesters.tif</td><td>(17, 59)</td><td>(14, 124)</td><td>14.859</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>icon.tif</td><td>(17, 41)</td><td>(23, 89)</td><td>14.253</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>italil.tif</td><td>(21, 38)</td><td>(35, 77)</td><td>16.824</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>lastochikino.tif</td><td>(-2, -3)</td><td>(-9, 75)</td><td>18.258</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>lugano.tif</td><td>(-16, 41)</td><td>(-29, 93)</td><td>18.184</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>melons.tif</td><td>(11, 82)</td><td>(14, 178)</td><td>15.233</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>self_portrait.tif</td><td>(29, 79)</td><td>(37, 176)</td><td>15.815</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>siren.tif</td><td>(-6, 49)</td><td>(-24, 96)</td><td>15.543</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-                <tr><td>three_generations.tif</td><td>(14, 52)</td><td>(11, 111)</td><td>15.279</td><td>No</td><td>NCC, pyramid (raw)</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <h2>Part 1.2 — Finite Difference Operator</h2>
+          <p>
+            Using <code>D<sub>x</sub> = [-1, 1]</code> and <code>D<sub>y</sub> = [-1; 1]</code>,
+            I compute partials, gradient magnitude, and a binarized edge map. The threshold balances
+            keeping true edges (facial outline, tripod) while suppressing noise; chosen visually.
+          </p>
         </div>
 
-        <!-- All pyramid outputs -->
-        <div class="full-bleed">
-          <div class="figure-grid">
-            <figure><img src="assets/pyramid/church.jpg" alt="church (pyramid NCC)"><figcaption>church — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/emir.jpg" alt="emir (pyramid NCC)"><figcaption>emir — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/harvesters.jpg" alt="harvesters (pyramid NCC)"><figcaption>harvesters — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/icon.jpg" alt="icon (pyramid NCC)"><figcaption>icon — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/italil.jpg" alt="italil (pyramid NCC)"><figcaption>italil — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/lastochikino.jpg" alt="lastochikino (pyramid NCC)"><figcaption>lastochikino — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/lugano.jpg" alt="lugano (pyramid NCC)"><figcaption>lugano — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/melons.jpg" alt="melons (pyramid NCC)"><figcaption>melons — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/self_portrait.jpg" alt="self portrait (pyramid NCC)"><figcaption>self_portrait — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/siren.jpg" alt="siren (pyramid NCC)"><figcaption>siren — pyramid (NCC)</figcaption></figure>
-            <figure><img src="assets/pyramid/three_generations.jpg" alt="three generations (pyramid NCC)"><figcaption>three_generations — pyramid (NCC)</figcaption></figure>
-          </div>
-        </div>
-
-        <div class="prose">
-          <h3>Difficult / Failure Cases</h3>
-          <p>
-            <b>emir.tif (challenging without edge detection):</b> The Emir’s portrait has strong, saturated reds and dark blues in
-            the robe and background. These channels differ in brightness and contrast, so raw-intensity NCC tends to maximize
-            correlation on <em>color</em> rather than <em>structure</em>. The fabric’s ornate, repeating patterns create many
-            near-duplicate patches, leading to false peaks and small but visible misalignments around the robe trim and borders.
-          </p>
-          <p>
-            <b>Mitigation:</b> scoring on Sobel/Scharr edge maps reduces sensitivity to per-channel brightness/saturation and to
-            repetitive color textures. With a hard pre-crop and a slightly larger coarse search window, edge-based NCC snaps
-            channels to structural boundaries (seams, contours, jewelry edges), removing the rainbow halo.
-          </p>
+        <div class="figure-grid">
+          <figure><img src="assets/part1/1_2/cameraman_Gx.png" alt="Ix"><figcaption><code>I<sub>x</sub></code></figcaption></figure>
+          <figure><img src="assets/part1/1_2/cameraman_Gy.png" alt="Iy"><figcaption><code>I<sub>y</sub></code></figcaption></figure>
+          <figure><img src="assets/part1/1_2/cameraman_gradmag.png" alt="‖∇I‖"><figcaption>Gradient magnitude</figcaption></figure>
+          <figure><img src="assets/part1/1_2/BEST_cameraman_edges_T0.20.png" alt="Edges"><figcaption>Binarized edge image</figcaption></figure>
         </div>
       </div>
     </section>
 
-    <!-- ===== Extras ===== -->
-    <section class="section" id="own">
+    <!-- 1.3 Gaussian & DoG -->
+    <section class="section" id="p1-3">
       <div class="container">
         <div class="prose">
-          <h2>Additional Images from the Collection (NCC)</h2>
-          <p>Tested a few extra plates with the same fixed parameters (no per-image tuning).</p>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>G → B (dx, dy)</th>
-                  <th>R → B (dx, dy)</th>
-                  <th>Runtime (s)</th>
-                  <th>Method</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>forest.tif</td>
-                  <td>(-31, 37)</td>
-                  <td>(7, 97)</td>
-                  <td>14.743</td>
-                  <td>NCC, pyramid</td>
-                </tr>
-                <tr>
-                  <td>religious.tif</td>
-                  <td>(3, 29)</td>
-                  <td>(7, 69)</td>
-                  <td>14.202</td>
-                  <td>NCC, pyramid</td>
-                </tr>
-                <tr>
-                  <td>zakat.tif</td>
-                  <td>(-41, 75)</td>
-                  <td>(-68, 114)</td>
-                  <td>15.780</td>
-                  <td>NCC, pyramid</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <h2>Part 1.3 — Gaussian &amp; Derivative of Gaussian (DoG)</h2>
+          <p>
+            I build 2D Gaussians using <code>cv2.getGaussianKernel</code> and form DoG filters by
+            convolving the Gaussian with the finite-difference operators. I apply both
+            (a) Gaussian smoothing + finite differences and (b) single-pass DoG to the cameraman,
+            and compare to plain finite differences (less noise, sharper true edges).
+          </p>
         </div>
 
-        <div class="full-bleed">
-          <div class="figure-grid">
-            <figure>
-              <img src="assets/extras/forest.jpg" alt="forest (NCC)" loading="lazy" decoding="async">
-              <figcaption>forest — NCC, pyramid</figcaption>
-            </figure>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part1/1_3/gaussian_kernel.png" alt="Gaussian kernel (k=9, σ=1.5)">
+            <figcaption>Gaussian kernel (k=9, σ=1.5)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/DoGx_k9_s1.5.png" alt="DoG x filter (k=9, σ=1.5)">
+            <figcaption>DoG (x) filter</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/DoGy_k9_s1.5.png" alt="DoG y filter (k=9, σ=1.5)">
+            <figcaption>DoG (y) filter</figcaption>
+          </figure>
+        </div>
         
-            <figure>
-              <img src="assets/extras/religious.jpg" alt="religious painting (NCC)" loading="lazy" decoding="async">
-              <figcaption>religious painting — NCC, pyramid</figcaption>
-            </figure>
+        <div class="prose">
+          <h3>Gaussian blur → finite differences (k=9, σ=1.5)</h3>
+        </div>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part1/1_3/cameraman_blur_k9_s1.5.png" alt="Cameraman blurred (k=9, σ=1.5)">
+            <figcaption>Blurred</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/cameraman_blur_Gx_k9_s1.5.png" alt="Gx after blur">
+            <figcaption>Gx (blur → Dx)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/cameraman_blur_Gy_k9_s1.5.png" alt="Gy after blur">
+            <figcaption>Gy (blur → Dy)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/cameraman_blur_gradmag_k9_s1.5.png" alt="Grad mag after blur">
+            <figcaption>Grad magnitude</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/cameraman_blur_edges_T0.20.png" alt="Edges after blur, T=0.20">
+            <figcaption>Edges (T = 0.20)</figcaption>
+          </figure>
+        </div>
         
-            <figure>
-              <img src="assets/extras/zakat.jpg" alt="zakat (NCC)" loading="lazy" decoding="async">
-              <figcaption>zakat — NCC, pyramid</figcaption>
-            </figure>
-          </div>
+        <div class="prose">
+          <h3>Single-pass Derivative of Gaussian (DoG)</h3>
+        </div>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part1/1_3/cameraman_DoG_Gx_k9_s1.5.png" alt="DoG Gx response">
+            <figcaption>DoG Gx response</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/cameraman_DoG_Gy_k9_s1.5.png" alt="DoG Gy response">
+            <figcaption>DoG Gy response</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/cameraman_DoG_gradmag_k9_s1.5.png" alt="DoG grad magnitude">
+            <figcaption>DoG grad magnitude</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/1_3/cameraman_DoG_edges_T0.20.png" alt="DoG edges, T=0.20">
+            <figcaption>DoG edges (T = 0.20)</figcaption>
+          </figure>
         </div>
     </section>
 
-    <!-- ===== Edge-Based Scoring (Sobel) ===== -->
-    <section class="section" id="edges">
+    <!-- =================
+         PART 2: Uses
+         ================= -->
+    <!-- 2.1 Unsharp mask -->
+    <section class="section" id="p2-1">
       <div class="container">
         <div class="prose">
-          <h2>Edge-Based Scoring (Sobel)</h2>
+          <h2>Part 2.1 — Image “Sharpening” (Unsharp Mask)</h2>
           <p>
-            Brightness and saturation differ strongly across Emir’s channels (deep reds/blues), so raw-intensity NCC can
-            correlate on <em>color</em> rather than <em>structure</em>. Repeating fabric motifs also create near-duplicate patches,
-            yielding false peaks. Evaluating <strong>ZNCC on Sobel edge magnitude</strong> emphasizes shared boundaries and is far
-            less sensitive to per-channel brightness/hue, which tightens alignment and removes color fringing.
+            Unsharp mask adds scaled high frequencies back: <code>I + α(I − G∗I)</code>.
+            I also form a single kernel <code>K = (1+α)δ − αG</code> to do it in one convolution.
+            Below: Taj Mahal (required) and one extra image; plus an amount sweep.
           </p>
-
-          <h3>Emir: alignment comparison</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Method</th>
-                  <th>G → B (dx, dy)</th>
-                  <th>R → B (dx, dy)</th>
-                  <th>Runtime (s)</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>NCC on intensity (pyramid)</td>
-                  <td>(24, 49)</td>
-                  <td>(43, 61)</td>
-                  <td>14.541</td>
-                  <td>Baseline; visible color fringing on robe trim</td>
-                </tr>
-                <tr>
-                  <td>ZNCC on Sobel edges (pyramid)</td>
-                  <td>(24, 49)</td>
-                  <td>(40, 107)</td>
-                  <td>18.596</td>
-                  <td>Sharper edges; reduced false matches</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
 
-        <!-- Before/after images -->
-        <div class="full-bleed">
-          <div class="figure-grid">
-            <figure>
-              <img src="assets/pyramid/emir.jpg" alt="emir — NCC on intensity (before)" loading="lazy" decoding="async">
-              <figcaption>Before — NCC on raw intensity (pyramid)</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/edges/emir.jpg" alt="emir — ZNCC on Sobel edges (after)" loading="lazy" decoding="async">
-              <figcaption>After — ZNCC on Sobel edge magnitude (pyramid)</figcaption>
-            </figure>
-          </div>
+        <!-- Taj Mahal: low/high/sharp variations -->
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part2/2_1/taj_low_k9_s2.0.png" alt="Taj low-pass (k=9, σ=2.0)">
+            <figcaption>Taj — low-pass (blurred)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/taj_high_vis_k9_s2.0.png" alt="Taj high-freq visualization">
+            <figcaption>Taj — high frequencies (vis.)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/taj_sharp_a0.30_k9_s2.0.png" alt="Taj sharpened α=0.30">
+            <figcaption>Sharpened (α = 0.30)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/taj_sharp_a0.80_k9_s2.0.png" alt="Taj sharpened α=0.80">
+            <figcaption>Sharpened (α = 0.80)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/taj_sharp_a1.20_k9_s2.0.png" alt="Taj sharpened α=1.20">
+            <figcaption>Sharpened (α = 1.20)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/taj_sharp_a1.60_k9_s2.0.png" alt="Taj sharpened α=1.60">
+            <figcaption>Sharpened (α = 1.60)</figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part2/2_1/taj_sharp_singlekernel_a1.20_k9_s2.0.png" alt="Single-kernel unsharp (α=1.20)">
+            <figcaption>Single-kernel unsharp (α = 1.20) — one-pass convolution</figcaption>
+          </figure>
+        </div>
+
+        <!-- Extra: blur a sharp image and restore -->
+        <div class="prose">
+          <h3>Extra Evaluation — Blur &amp; Restore</h3>
+          <p>
+            I blurred a sharp image (k=9, σ=2.0) and tried restoring it with different α values
+            to test the unsharp mask’s ability to recover high frequencies.
+          </p>
+        </div>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part2/2_1/sharp_blurred_k9_s2.0.png" alt="Sharp → blurred">
+            <figcaption>Sharp → blurred (k=9, σ=2.0)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/sharp_blurred_restored_a0.80.png" alt="Restored α=0.80">
+            <figcaption>Restored (α = 0.80)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/sharp_blurred_restored_a1.20.png" alt="Restored α=1.20">
+            <figcaption>Restored (α = 1.20)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_1/sharp_blurred_restored_a1.60.png" alt="Restored α=1.60">
+            <figcaption>Restored (α = 1.60)</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.2 Hybrid images -->
+    <section class="section" id="p2-2">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2.2 — Hybrid Images</h2>
+          <p>
+            Hybrids are formed by adding a low-pass version of image A to a high-pass version of image B.
+            Below I show one pair with the full pipeline (alignment, filters, FFTs, and cutoff sweep),
+            followed by two more pairs with inputs and final results.
+          </p>
+        </div>
+
+        <!-- ===== Full pipeline: Derek + Cat ===== -->
+        <div class="prose">
+          <h3>Derek + Cat — full pipeline</h3>
+          <p>Cutoff choice explored: σ<sub>A</sub> ∈ {6, 8, 10}, σ<sub>B</sub> ∈ {3, 4}.</p>
+        </div>
+
+        <!-- Inputs -->
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_input.png" alt="Derek (A)">
+            <figcaption>Source A (Derek)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_input.png" alt="Cat (B)">
+            <figcaption>Source B (Cat)</figcaption></figure>
+        </div>
+
+        <!-- Filtered results (a few representative settings) -->
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s6.0.png" alt="A low s=6.0">
+            <figcaption>A low-pass (σ=6.0)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s8.0.png" alt="A low s=8.0">
+            <figcaption>A low-pass (σ=8.0)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s10.0.png" alt="A low s=10.0">
+            <figcaption>A low-pass (σ=10.0)</figcaption></figure>
+
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_high_vis_s3.0.png" alt="B high s=3.0">
+            <figcaption>B high-pass (σ=3.0, vis.)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_high_vis_s4.0.png" alt="B high s=4.0">
+            <figcaption>B high-pass (σ=4.0, vis.)</figcaption></figure>
+        </div>
+
+        <!-- FFTs -->
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_2/derek_cat/fft_A.png" alt="FFT A"><figcaption>log|FFT(A)|</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/fft_B.png" alt="FFT B"><figcaption>log|FFT(B)|</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/fft_A_low.png" alt="FFT A_low"><figcaption>log|FFT(A<sub>low</sub>)|</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/fft_B_high.png" alt="FFT B_high"><figcaption>log|FFT(B<sub>high</sub>)|</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/fft_H.png" alt="FFT Hybrid"><figcaption>log|FFT(Hybrid)|</figcaption></figure>
+        </div>
+
+        <!-- Results for a few (σA, σB) -->
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA6.0_sB3.0.png" alt="result sA6 sB3">
+            <figcaption>Hybrid (σ<sub>A</sub>=6.0, σ<sub>B</sub>=3.0)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA8.0_sB4.0.png" alt="result sA8 sB4">
+            <figcaption>Hybrid (σ<sub>A</sub>=8.0, σ<sub>B</sub>=4.0)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA10.0_sB4.0.png" alt="result sA10 sB4">
+            <figcaption>Hybrid (σ<sub>A</sub>=10.0, σ<sub>B</sub>=4.0)</figcaption></figure>
+        </div>
+
+        <!-- ===== Hybrid #2: Vader + Anakin (inputs + final) ===== -->
+        <div class="prose">
+          <h3>Hybrid #2 — Vader + Anakin</h3>
+        </div>
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_2/vader_anakin/hyb_A_input.png" alt="Vader/Anakin A">
+            <figcaption>Source A</figcaption></figure>
+          <figure><img src="assets/part2/2_2/vader_anakin/hyb_B_input.png" alt="Vader/Anakin B">
+            <figcaption>Source B</figcaption></figure>
+          <figure><img src="assets/part2/2_2/vader_anakin/hyb_result_sA6.0_sB3.0.png" alt="Vader+Anakin hybrid">
+            <figcaption>Hybrid result</figcaption></figure>
+        </div>
+
+        <!-- ===== Hybrid #3: Walter + Heisenberg (inputs + final) ===== -->
+        <div class="prose">
+          <h3>Hybrid #3 — Walter + Heisenberg</h3>
+        </div>
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_A_input.png" alt="Walter/Heisenberg A">
+            <figcaption>Source A</figcaption></figure>
+          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_B_input.png" alt="Walter/Heisenberg B">
+            <figcaption>Source B</figcaption></figure>
+          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_result_sA8.0_sB4.0.png" alt="Walter+Heisenberg hybrid">
+            <figcaption>Hybrid result</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.3 Gaussian & Laplacian Stacks (no blending yet) -->
+    <section class="section" id="p2-3">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2.3 — Gaussian &amp; Laplacian Stacks (Apple &amp; Orange)</h2>
+          <p>
+            I build <em>stacks</em> (no downsampling): each Gaussian level is further blurred from the previous,
+            and each Laplacian level is the band-pass difference between consecutive Gaussians. At the end I
+            reconstruct the image by summing all Laplacian levels plus the coarsest Gaussian.
+          </p>
+        </div>
+
+        <!-- Apple: Gaussian stack -->
+        <div class="prose"><h3>Apple — Gaussian stack</h3></div>
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_3/apple_gauss_L0.png" alt="Apple Gaussian L0"><figcaption>G L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L1.png" alt="Apple Gaussian L1"><figcaption>G L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L2.png" alt="Apple Gaussian L2"><figcaption>G L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L3.png" alt="Apple Gaussian L3"><figcaption>G L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L4.png" alt="Apple Gaussian L4"><figcaption>G L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L5.png" alt="Apple Gaussian L5"><figcaption>G L5</figcaption></figure>
+        </div>
+
+        <!-- Apple: Laplacian stack -->
+        <div class="prose"><h3>Apple — Laplacian stack</h3></div>
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_3/apple_lap_L0.png" alt="Apple Laplacian L0"><figcaption>L L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L1.png" alt="Apple Laplacian L1"><figcaption>L L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L2.png" alt="Apple Laplacian L2"><figcaption>L L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L3.png" alt="Apple Laplacian L3"><figcaption>L L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L4.png" alt="Apple Laplacian L4"><figcaption>L L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L5.png" alt="Apple Laplacian L5"><figcaption>L L5</figcaption></figure>
+        </div>
+
+        <!-- Apple: reconstruction check -->
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part2/2_3/apple_reconstructed.png" alt="Apple reconstructed from stacks">
+            <figcaption>Apple — reconstruction from Laplacian stack + coarsest Gaussian</figcaption>
+          </figure>
+        </div>
+
+        <!-- Orange: Gaussian stack -->
+        <div class="prose"><h3>Orange — Gaussian stack</h3></div>
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_3/orange_gauss_L0.png" alt="Orange Gaussian L0"><figcaption>G L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L1.png" alt="Orange Gaussian L1"><figcaption>G L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L2.png" alt="Orange Gaussian L2"><figcaption>G L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L3.png" alt="Orange Gaussian L3"><figcaption>G L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L4.png" alt="Orange Gaussian L4"><figcaption>G L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L5.png" alt="Orange Gaussian L5"><figcaption>G L5</figcaption></figure>
+        </div>
+
+        <!-- Orange: Laplacian stack -->
+        <div class="prose"><h3>Orange — Laplacian stack</h3></div>
+        <div class="figure-grid">
+          <figure><img src="assets/part2/2_3/orange_lap_L0.png" alt="Orange Laplacian L0"><figcaption>L L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L1.png" alt="Orange Laplacian L1"><figcaption>L L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L2.png" alt="Orange Laplacian L2"><figcaption>L L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L3.png" alt="Orange Laplacian L3"><figcaption>L L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L4.png" alt="Orange Laplacian L4"><figcaption>L L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L5.png" alt="Orange Laplacian L5"><figcaption>L L5</figcaption></figure>
+        </div>
+
+        <!-- Orange: reconstruction check -->
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part2/2_3/orange_reconstructed.png" alt="Orange reconstructed from stacks">
+            <figcaption>Orange — reconstruction from Laplacian stack + coarsest Gaussian</figcaption>
+          </figure>
         </div>
 
         <div class="prose">
           <p class="notes">
-            Why it helps: edge magnitude is largely invariant to per-channel brightness/saturation, so similarity peaks align on
-            structural contours shared across channels (garment seams, facial outlines, jewelry). This reduces rainbow halos and
-            stabilizes coarse-to-fine search.
+            Reconstruction sanity check: the reconstructed images closely match the originals (small differences only from
+            numeric rounding and border handling). These stacks will be used for multi-resolution blending in Part 2.4.
           </p>
         </div>
       </div>
     </section>
+    
+    <!-- 2.4 Multiresolution Blending (Oraple + Custom Pairs) -->
+    <section class="section" id="p2-4">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2.4 — Multiresolution Blending (a.k.a. the oraple!)</h2>
+          <p>
+            Using the Gaussian/Laplacian stacks from Part 2.3, I blend images across frequency bands. A smooth
+            transition is achieved by applying the same Gaussian stack to the mask, so coarse bands blend broadly
+            and fine bands blend tightly, avoiding hard seams.
+          </p>
+        </div>
 
+        <!-- Oraple (vertical seam) -->
+        <div class="prose"><h3>Recreating the “Oraple”</h3></div>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part2/2_4/oraple_apple.png" alt="Apple">
+            <figcaption>Apple</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4/oraple_orange.png" alt="Orange">
+            <figcaption>Orange</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4/mask_vertical.png" alt="Vertical step mask">
+            <figcaption>Vertical step mask</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4/oraple_vertical.png" alt="Oraple multires blend">
+            <figcaption>Recreated “oraple” (multires blend)</figcaption>
+          </figure>
+        </div>
+
+        <!-- Custom Pair 1: Batman ↔ Joker (vertical seam) -->
+        <div class="prose"><h3>Custom Pair #1 — Batman ↔ Joker (vertical seam)</h3></div>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part2/2_4_pairs/bj_batman.png" alt="Batman input">
+            <figcaption>Input A — Batman</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4_pairs/bj_joker.png" alt="Joker input">
+            <figcaption>Input B — Joker</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4_pairs/mask_vertical_batman_joker.png" alt="Vertical mask (centered)">
+            <figcaption>Vertical mask (light feather)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4_pairs/bj_vertical_blend.png" alt="Batman/Joker multires blend">
+            <figcaption>Multires blend — centered seam</figcaption>
+          </figure>
+        </div>
+
+        <!-- Custom Pair 2: Lamborghinis (irregular mask) -->
+        <div class="prose">
+          <h3>Custom Pair #2 — Lamborghinis (irregular, hand-drawn mask)</h3>
+          <p>
+            I painted a jagged mask around the blue car’s rear half. Below are (1) a simple alpha composite to
+            visualize the mask’s silhouette and (2) the final multiresolution blend which reduces haloing by
+            smoothing the mask per frequency band.
+          </p>
+        </div>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part2/2_4_pairs/lambo_simple_blend_whiteKeepsBLUE.png" alt="Lambo simple alpha (white keeps blue)">
+            <figcaption>Simple alpha (white keeps BLUE)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsBLUE.png" alt="Lambo multires jagged blend (white keeps blue)">
+            <figcaption>Multires blend (white keeps BLUE)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsGOLD.png" alt="Lambo multires jagged blend (white keeps gold)">
+            <figcaption>Multires blend (white keeps GOLD)</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
+          <p class="notes">
+            Notes: For hard-edged, high-contrast boundaries (like car silhouettes), the multires blend clearly
+            outperforms a single-scale alpha composite, especially near the mask edge where ringing or halos
+            would otherwise appear.
+          </p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
-    <p>© <span id="y"></span> Matthew Gerardi — CS180 Project 1</p>
+    <p>© <span id="y"></span> Matthew Gerardi — CS180 Project 2</p>
   </footer>
 
   <script>
