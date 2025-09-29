@@ -193,40 +193,96 @@
 
     <!-- 2.1 Unsharp mask -->
     <section class="section" id="p2-1">
-      <div class="container">
+        <div class="container">
         <div class="prose">
-          <h2>Part 2.1 — Image “Sharpening” (Unsharp Mask)</h2>
-          <p>
-            Unsharp mask adds back scaled highs: <code>I<sub>sharp</sub> = I + α(I − G∗I)</code>. I also form a single
-            kernel <code>K = (1+α)δ − αG</code> to do it in one convolution. Below: Taj Mahal (required) with an α-sweep,
-            plus a blur→restore test on a sharp image.
-          </p>
+            <h2>Part 2.1 — Image “Sharpening” (Unsharp Mask)</h2>
+            <p>
+            The <strong>unsharp mask</strong> is a classic way to sharpen an image by amplifying its
+            <em>high-frequency details</em> (edges and fine texture). We first create a
+            <em>blurred</em> version of the image <code>G * I</code> using a Gaussian filter.
+            Subtracting this from the original isolates the high-frequency content
+            <code>H = I − G*I</code>. We then add a scaled version of these details back:
+            </p>
+            <p class="formula">
+            <code>I<sub>sharp</sub> = I + α · (I − G * I)</code>
+            </p>
+            <p>
+            Increasing <code>α</code> strengthens the edges: small α gives subtle sharpening;
+            large α can make the image appear crisp but also introduce halos or noise.
+            I also derived a <em>single convolution kernel</em>
+            <code>K = (1 + α)δ − αG</code>, which lets the whole sharpening process run in one
+            convolution instead of two steps.
+            </p>
         </div>
-
+    
+        <!-- Taj Mahal examples -->
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_1/taj_low_k9_s2.0.png" alt="Taj low-pass"><figcaption>Taj — low-pass (blurred)</figcaption></figure>
-          <figure><img src="assets/part2/2_1/taj_high_vis_k9_s2.0.png" alt="Taj highs"><figcaption>Taj — high frequencies (vis.)</figcaption></figure>
-          <figure><img src="assets/part2/2_1/taj_sharp_a0.30_k9_s2.0.png" alt="α=0.30"><figcaption>Sharpened (α = 0.30)</figcaption></figure>
-          <figure><img src="assets/part2/2_1/taj_sharp_a0.80_k9_s2.0.png" alt="α=0.80"><figcaption>Sharpened (α = 0.80)</figcaption></figure>
-          <figure><img src="assets/part2/2_1/taj_sharp_a1.20_k9_s2.0.png" alt="α=1.20"><figcaption>Sharpened (α = 1.20)</figcaption></figure>
-          <figure><img src="assets/part2/2_1/taj_sharp_a1.60_k9_s2.0.png" alt="α=1.60"><figcaption>Sharpened (α = 1.60)</figcaption></figure>
-          <figure class="span-2">
+            <figure>
+            <img src="assets/part2/2_1/taj_low_k9_s2.0.png" alt="Taj low-pass">
+            <figcaption>Taj — blurred (Gaussian low-pass)</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/taj_high_vis_k9_s2.0.png" alt="Taj highs">
+            <figcaption>Taj — isolated high frequencies (visualized)</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/taj_sharp_a0.30_k9_s2.0.png" alt="α=0.30">
+            <figcaption>Sharpened (α = 0.30)</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/taj_sharp_a0.80_k9_s2.0.png" alt="α=0.80">
+            <figcaption>Sharpened (α = 0.80)</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/taj_sharp_a1.20_k9_s2.0.png" alt="α=1.20">
+            <figcaption>Sharpened (α = 1.20)</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/taj_sharp_a1.60_k9_s2.0.png" alt="α=1.60">
+            <figcaption>Sharpened (α = 1.60)</figcaption>
+            </figure>
+            <figure class="span-2">
             <img src="assets/part2/2_1/taj_sharp_singlekernel_a1.20_k9_s2.0.png" alt="single-kernel">
-            <figcaption>Single-kernel unsharp (α = 1.20) — one pass</figcaption>
-          </figure>
+            <figcaption>Single-kernel unsharp (α = 1.20) — one-pass convolution</figcaption>
+            </figure>
         </div>
-
+    
         <div class="prose">
-          <h3>Extra — Blur &amp; Restore</h3>
-          <p>Blur a sharp image (k=9, σ=2.0) and restore with different α to gauge how much sharpening is “too much.”</p>
+            <h3>Extra — Blur &amp; Restore</h3>
+            <p>
+            To test how well unsharp masking recovers lost detail, I intentionally blurred a
+            sharp image (Gaussian σ = 2.0) and applied different <code>α</code> values.
+            Lower α partially recovers edges; higher α can over-shoot and cause halos.
+            </p>
         </div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_1/sharp_blurred_k9_s2.0.png" alt="Sharp→blurred"><figcaption>Sharp → blurred</figcaption></figure>
-          <figure><img src="assets/part2/2_1/sharp_blurred_restored_a0.80.png" alt="restored 0.8"><figcaption>Restored (α = 0.80)</figcaption></figure>
-          <figure><img src="assets/part2/2_1/sharp_blurred_restored_a1.20.png" alt="restored 1.2"><figcaption>Restored (α = 1.20)</figcaption></figure>
-          <figure><img src="assets/part2/2_1/sharp_blurred_restored_a1.60.png" alt="restored 1.6"><figcaption>Restored (α = 1.60)</figcaption></figure>
+            <figure>
+            <img src="assets/part2/2_1/sharp_blurred_k9_s2.0.png" alt="Sharp→blurred">
+            <figcaption>Sharp → blurred</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/sharp_blurred_restored_a0.80.png" alt="restored 0.8">
+            <figcaption>Restored (α = 0.80)</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/sharp_blurred_restored_a1.20.png" alt="restored 1.2">
+            <figcaption>Restored (α = 1.20)</figcaption>
+            </figure>
+            <figure>
+            <img src="assets/part2/2_1/sharp_blurred_restored_a1.60.png" alt="restored 1.6">
+            <figcaption>Restored (α = 1.60)</figcaption>
+            </figure>
         </div>
-      </div>
+    
+        <div class="prose notes">
+            <p>
+            <strong>Observations:</strong> Unsharp masking works because a Gaussian blur removes
+            fine details; subtracting it gives a band-pass layer of edges and textures.
+            Adding that layer back amplifies details. However, too large an α
+            can cause bright/dark halos and emphasize noise.
+            </p>
+        </div>
+        </div>
     </section>
 
     <!-- 2.2 Hybrid images -->
