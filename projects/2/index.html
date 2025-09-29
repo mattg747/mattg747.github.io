@@ -134,37 +134,57 @@
 
     <!-- 1.3 Gaussian & DoG -->
     <section class="section" id="p1-3">
-      <div class="container">
+        <div class="container">
         <div class="prose">
-          <h2>Part 1.3 — Gaussian &amp; Derivative of Gaussian (DoG)</h2>
-          <p>
+            <h2>Part 1.3 — Gaussian &amp; Derivative of Gaussian (DoG)</h2>
+            <p>
             I build 2D Gaussians using <code>cv2.getGaussianKernel</code> and form DoG filters by convolving the Gaussian
             with the finite-difference operators. I compare (a) blur → finite differences against (b) single-pass DoG.
-          </p>
+            </p>
         </div>
-
+    
         <div class="figure-grid">
-          <figure><img src="assets/part1/1_3/DoGx_k9_s1.5.png" alt="DoG x filter"><figcaption>DoG (x) filter</figcaption></figure>
-          <figure><img src="assets/part1/1_3/DoGy_k9_s1.5.png" alt="DoG y filter"><figcaption>DoG (y) filter</figcaption></figure>
+            <figure><img src="assets/part1/1_3/DoGx_k9_s1.5.png" alt="DoG x filter"><figcaption>DoG (x) filter</figcaption></figure>
+            <figure><img src="assets/part1/1_3/DoGy_k9_s1.5.png" alt="DoG y filter"><figcaption>DoG (y) filter</figcaption></figure>
         </div>
-
+    
         <div class="prose"><h3>Gaussian blur → finite differences (k=9, σ=1.5)</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part1/1_3/cameraman_blur_k9_s1.5.png" alt="Blurred"><figcaption>Blurred</figcaption></figure>
-          <figure><img src="assets/part1/1_3/cameraman_blur_Gx_k9_s1.5.png" alt="Gx after blur"><figcaption>Gx (blur → Dx)</figcaption></figure>
-          <figure><img src="assets/part1/1_3/cameraman_blur_Gy_k9_s1.5.png" alt="Gy after blur"><figcaption>Gy (blur → Dy)</figcaption></figure>
-          <figure><img src="assets/part1/1_3/cameraman_blur_gradmag_k9_s1.5.png" alt="Grad mag"><figcaption>Grad magnitude</figcaption></figure>
-          <figure><img src="assets/part1/1_3/cameraman_blur_edges_T0.20.png" alt="Edges T=0.20"><figcaption>Edges (T = 0.20)</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_blur_k9_s1.5.png" alt="Blurred"><figcaption>Blurred</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_blur_Gx_k9_s1.5.png" alt="Gx after blur"><figcaption>Gx (blur → Dx)</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_blur_Gy_k9_s1.5.png" alt="Gy after blur"><figcaption>Gy (blur → Dy)</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_blur_gradmag_k9_s1.5.png" alt="Grad mag"><figcaption>Grad magnitude</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_blur_edges_T0.20.png" alt="Edges T=0.20"><figcaption>Edges (T = 0.20)</figcaption></figure>
         </div>
-
+    
         <div class="prose"><h3>Single-pass Derivative of Gaussian (DoG)</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part1/1_3/cameraman_DoG_Gx_k9_s1.5.png" alt="DoG Gx"><figcaption>DoG Gx response</figcaption></figure>
-          <figure><img src="assets/part1/1_3/cameraman_DoG_Gy_k9_s1.5.png" alt="DoG Gy"><figcaption>DoG Gy response</figcaption></figure>
-          <figure><img src="assets/part1/1_3/cameraman_DoG_gradmag_k9_s1.5.png" alt="DoG grad mag"><figcaption>DoG grad magnitude</figcaption></figure>
-          <figure><img src="assets/part1/1_3/cameraman_DoG_edges_T0.20.png" alt="DoG edges T=0.20"><figcaption>DoG edges (T = 0.20)</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_DoG_Gx_k9_s1.5.png" alt="DoG Gx"><figcaption>DoG Gx response</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_DoG_Gy_k9_s1.5.png" alt="DoG Gy"><figcaption>DoG Gy response</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_DoG_gradmag_k9_s1.5.png" alt="DoG grad mag"><figcaption>DoG grad magnitude</figcaption></figure>
+            <figure><img src="assets/part1/1_3/cameraman_DoG_edges_T0.20.png" alt="DoG edges T=0.20"><figcaption>DoG edges (T = 0.20)</figcaption></figure>
         </div>
-      </div>
+    
+        <!-- ✅ Comparison / discussion -->
+        <div class="prose comparison-explainer">
+            <h3>Comparison — Finite Difference vs Derivative of Gaussian</h3>
+            <p>
+            Both methods compute image gradients but in different ways:
+            </p>
+            <ul>
+            <li><b>Finite differences (FD):</b> Applies small kernels like <code>[1, 0, -1]</code> directly on the raw image.
+                It is a simple numerical derivative that reacts to every tiny pixel change — including noise.</li>
+            <li><b>Gaussian → FD (or DoG):</b> Smooths the image with a Gaussian <code>G_σ</code> first, then differentiates.
+                Mathematically this equals convolving the image with the derivative of a Gaussian. The smoothing suppresses
+                high-frequency noise while keeping strong edges.</li>
+            </ul>
+            <p>
+            <b>Key difference:</b> strong edges appear in both, but the plain FD edges look noisier and break into speckles,
+            while DoG produces cleaner, more continuous edges with less ringing. The Gaussian blur spreads each edge slightly
+            before differentiating, reducing sensitivity to single-pixel intensity jumps.
+            </p>
+        </div>
+        </div>
     </section>
 
     <!-- =================
