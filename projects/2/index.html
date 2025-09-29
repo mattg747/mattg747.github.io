@@ -73,19 +73,40 @@
             <figure><img src="assets/part1/1_1/selfie_box_scipy.png" alt="Selfie box (SciPy)">
             <figcaption>9×9 box — SciPy <code>convolve2d</code></figcaption></figure>
             <figure><img src="assets/part1/1_1/selfie_dx.png" alt="Dx on selfie">
-            <figcaption><code>D<sub>x</sub></code>Convolve Dx</figcaption></figure>
+            <figcaption>Dx response</figcaption></figure>
             <figure><img src="assets/part1/1_1/selfie_dy.png" alt="Dy on selfie">
-            <figcaption><code>D<sub>x</sub></code>Convolve Dx</figcaption></figure>
+            <figcaption>Dy response</figcaption></figure>
         </div>
-        
+    
         <!-- ✅ Code screenshot -->
         <div class="figure-grid">
             <figure class="span-2">
             <img src="assets/part1/1_1/conv2d_code.png" alt="Screenshot of my conv2d implementation">
-            <figcaption>My custom <code>conv2d</code> implementation.</figcaption>
+            <figcaption>My custom <code>conv2d</code> implementation (NumPy loops &amp; vectorized version).</figcaption>
             </figure>
         </div>
-
+    
+        <!-- ✅ Runtime & boundary discussion -->
+        <div class="prose">
+            <h3>Runtime &amp; Boundary Handling</h3>
+            <p>
+            My <b>four-loop</b> implementation is the most naive but easy to verify; the <b>two-loop</b> version
+            vectorizes one dimension and is roughly <b>7× faster</b> on 512×384 images with a 9×9 kernel.
+            <code>scipy.signal.convolve2d</code> is even faster because it uses optimized C backends and possibly FFTs.
+            </p>
+            <p>
+            I used <b>zero-padding</b> to keep image size consistent. When the convolution kernel needs pixels outside the image border, it assumes they are 0. This darkens borders slightly. In practice, <code>reflect</code> or <code>symmetric</code> padding avoids this,
+            but I stayed with zeros to match SciPy’s default “fillvalue=0” mode for fair comparison.
+            </p>
+        </div>
+    
+        <!-- ✅ Runtime screenshot -->
+        <div class="figure-grid">
+            <figure class="span-2">
+            <img src="assets/part1/1_1/convolution_runtimes.png" alt="Runtime benchmark">
+            <figcaption>Runtime comparison — 4-loop (3.36 s), 2-loop (0.48 s), SciPy (0.02 s) on a 512×384 image with a 9×9 kernel.</figcaption>
+            </figure>
+        </div>
         </div>
     </section>
 
@@ -95,16 +116,16 @@
         <div class="prose">
           <h2>Part 1.2 — Finite Difference Operator</h2>
           <p>
-            I estimate partial derivatives with <code>D<sub>x</sub> = [-1, +1]</code> and
-            <code>D<sub>y</sub> = [-1; +1]</code>. The gradient magnitude is
+            I estimate partial derivatives with <code>D<sub>x</sub> = [1, 0, -1]</code> and
+            <code>D<sub>y</sub> = [1; 0; -1]</code>. The gradient magnitude is
             <code>‖∇I‖ = √(I<sub>x</sub>² + I<sub>y</sub>²)</code>. To binarize edges I sweep a threshold and pick one that
-            keeps structural contours (tripod, jacket outline) while suppressing noise.
+            keeps structural contours (tripod, jacket outline) while suppressing noise and unwanted background features.
           </p>
         </div>
 
         <div class="figure-grid">
-          <figure><img src="assets/part1/1_2/cameraman_Gx.png" alt="Ix"><figcaption><code>I<sub>x</sub></code></figcaption></figure>
-          <figure><img src="assets/part1/1_2/cameraman_Gy.png" alt="Iy"><figcaption><code>I<sub>y</sub></code></figcaption></figure>
+          <figure><img src="assets/part1/1_2/cameraman_Gx.png" alt="Ix"><figcaption>Convolve with Dx (gives vertical edges)</figcaption></figure>
+          <figure><img src="assets/part1/1_2/cameraman_Gy.png" alt="Iy"><figcaption>Convolve with Dy (gives horizontal edges)</figcaption></figure>
           <figure><img src="assets/part1/1_2/cameraman_gradmag.png" alt="‖∇I‖"><figcaption>Gradient magnitude</figcaption></figure>
           <figure><img src="assets/part1/1_2/BEST_cameraman_edges_T0.20.png" alt="Edges"><figcaption>Binarized edge image</figcaption></figure>
         </div>
