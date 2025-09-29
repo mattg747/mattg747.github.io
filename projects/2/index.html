@@ -8,7 +8,7 @@
 </head>
 <body>
   <header>
-    <h1>Project 2: Fun with Filters & Frequencies</h1>
+    <h1>Project 2: Fun with Filters &amp; Frequencies</h1>
     <nav><a href="/home.html">← Back to Portfolio</a></nav>
   </header>
 
@@ -27,15 +27,21 @@
         <div class="prose">
           <h2>Overview</h2>
           <p>
-            In Part 1, I implement spatial filtering from scratch and compare finite differences to
-            derivative-of-Gaussian (DoG). In Part 2, I apply these tools to image sharpening, hybrid images,
-            and multi-resolution blending using Gaussian/Laplacian stacks.
+            This project explores 2D filtering in both the spatial and frequency domains. In <b>Part 1</b> I
+            implement convolution from scratch and compare <em>finite differences</em> to
+            <em>derivative-of-Gaussian</em> (DoG) filters for edge detection. In <b>Part 2</b> I apply those ideas to
+            unsharp masking (image sharpening), hybrid images that change interpretation with distance, and
+            multiresolution blending using Gaussian/Laplacian stacks for seamless composites.
           </p>
           <ul>
-            <li><b>Stack:</b> Python, NumPy, SciPy, OpenCV, Matplotlib</li>
-            <li><b>Topics:</b> convolution, padding, finite differences, Gaussian/DoG, unsharp mask, FFT,
-              Gaussian &amp; Laplacian stacks, multiresolution blending</li>
+            <li><b>Languages / libs:</b> Python, NumPy, SciPy, OpenCV, Matplotlib</li>
+            <li><b>Concepts:</b> convolution &amp; padding, finite differences, Gaussian smoothing, DoG, unsharp mask,
+              frequency analysis (FFT), Gaussian/Laplacian stacks, multi-resolution blending</li>
           </ul>
+          <p class="notes">
+            I emphasize the trade-off between <em>noise suppression</em> and <em>detail preservation</em>, and show how
+            operating at different frequency bands explains both edge quality and why multires blending removes seams.
+          </p>
         </div>
       </div>
     </section>
@@ -43,28 +49,52 @@
     <!-- =========================
          PART 1: Filters & Edges
          ========================= -->
+
     <!-- 1.1 Convolution from scratch -->
     <section class="section" id="p1-1">
-      <div class="container">
+        <div class="container">
         <div class="prose">
-          <h2>Part 1.1 — Convolutions from Scratch</h2>
-          <p>
-            I wrote 2D convolution using four loops (reference) and a faster two-loop vectorized version
-            (NumPy only). Padding is zero-filled. I validate against <code>scipy.signal.convolve2d</code>
-            and discuss boundary handling and runtime.
-          </p>
-          <ul>
-            <li><b>Boundary:</b> zero padding; edges darken slightly vs reflect.</li>
-            <li><b>Runtime:</b> two-loop vectorized version is ~10–30× faster than four-loop on ~1MP images.</li>
-          </ul>
+            <h2>Part 1.1 — Convolutions from Scratch</h2>
+            <p>
+            I wrote 2D convolution with a four-loop reference and a faster two-loop vectorized version (NumPy only).
+            Padding is zero-filled. I validate against <code>scipy.signal.convolve2d</code> and discuss boundary
+            handling and runtime.
+            </p>
+            <h3>Notes on padding &amp; runtime</h3>
+            <ul>
+            <li><b>Padding:</b> zero padding slightly darkens borders compared to reflect/symmetric. I match SciPy by using the same mode.</li>
+            <li><b>Runtime:</b> the two-loop version is ~10–30× faster than four-loop on ~1 MP images (depends on kernel size).</li>
+            <li><b>Sanity:</b> box filter blurs uniformly; <code>D<sub>x</sub></code>/<code>D<sub>y</sub></code> respond at vertical/horizontal edges and flip sign with contrast.</li>
+            </ul>
+        </div>
+    
+        <!-- ✅ Original selfie image -->
+        <div class="figure-grid">
+            <figure class="span-2">
+            <img src="assets/part1/1_1/selfie.jpg" alt="Original selfie">
+            <figcaption>Original selfie — before any filtering</figcaption>
+            </figure>
+        </div>
+    
+        <!-- ✅ Filtered outputs -->
+        <div class="figure-grid">
+            <figure><img src="assets/part1/1_1/selfie_box_2loop.png" alt="Selfie box (my conv)">
+            <figcaption>9×9 box — my convolution</figcaption></figure>
+            <figure><img src="assets/part1/1_1/selfie_box_scipy.png" alt="Selfie box (SciPy)">
+            <figcaption>9×9 box — SciPy <code>convolve2d</code></figcaption></figure>
+            <figure><img src="assets/part1/1_1/selfie_dx.png" alt="Dx on selfie">
+            <figcaption><code>D<sub>x</sub></code> response (sanity check)</figcaption></figure>
+        </div>
+        
+        <!-- ✅ Code screenshot -->
+        <div class="figure-grid">
+            <figure class="span-2">
+            <img src="assets/part1/1_1/conv2d_code.png" alt="Screenshot of my conv2d implementation">
+            <figcaption>My custom <code>conv2d</code> implementation (NumPy loops &amp; vectorized version).</figcaption>
+            </figure>
         </div>
 
-        <div class="figure-grid">
-          <figure><img src="assets/part1/1_1/selfie_box_2loop.png" alt="Selfie box (my conv)"><figcaption>9×9 box — my convolution</figcaption></figure>
-          <figure><img src="assets/part1/1_1/selfie_box_scipy.png" alt="Selfie box (SciPy)"><figcaption>9×9 box — SciPy <code>convolve2d</code></figcaption></figure>
-          <figure><img src="assets/part1/1_1/selfie_dx.png" alt="Dx on selfie"><figcaption><code>D<sub>x</sub></code> response (sanity check)</figcaption></figure>
         </div>
-      </div>
     </section>
 
     <!-- 1.2 Finite differences -->
@@ -73,10 +103,15 @@
         <div class="prose">
           <h2>Part 1.2 — Finite Difference Operator</h2>
           <p>
-            Using <code>D<sub>x</sub> = [-1, 1]</code> and <code>D<sub>y</sub> = [-1; 1]</code>,
-            I compute partials, gradient magnitude, and a binarized edge map. The threshold balances
-            keeping true edges (facial outline, tripod) while suppressing noise; chosen visually.
+            I estimate partial derivatives with <code>D<sub>x</sub> = [-1, +1]</code> and
+            <code>D<sub>y</sub> = [-1; +1]</code>. The gradient magnitude is
+            <code>‖∇I‖ = √(I<sub>x</sub>² + I<sub>y</sub>²)</code>. To binarize edges I sweep a threshold and pick one that
+            keeps structural contours (tripod, jacket outline) while suppressing noise.
           </p>
+          <ul>
+            <li><b>Observation:</b> raw finite differences are sensitive to noise—fine textures show up as false edges.</li>
+            <li><b>Choice:</b> I report a threshold near T ≈ 0.20 on [0,1] images, which balanced completeness vs. noise.</li>
+          </ul>
         </div>
 
         <div class="figure-grid">
@@ -94,149 +129,82 @@
         <div class="prose">
           <h2>Part 1.3 — Gaussian &amp; Derivative of Gaussian (DoG)</h2>
           <p>
-            I build 2D Gaussians using <code>cv2.getGaussianKernel</code> and form DoG filters by
-            convolving the Gaussian with the finite-difference operators. I apply both
-            (a) Gaussian smoothing + finite differences and (b) single-pass DoG to the cameraman,
-            and compare to plain finite differences (less noise, sharper true edges).
+            I build 2D Gaussians using <code>cv2.getGaussianKernel</code> and form DoG filters by convolving the Gaussian
+            with the finite-difference operators. I compare (a) blur → finite differences against (b) single-pass DoG.
           </p>
         </div>
 
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part1/1_3/gaussian_kernel.png" alt="Gaussian kernel (k=9, σ=1.5)">
-            <figcaption>Gaussian kernel (k=9, σ=1.5)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/DoGx_k9_s1.5.png" alt="DoG x filter (k=9, σ=1.5)">
-            <figcaption>DoG (x) filter</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/DoGy_k9_s1.5.png" alt="DoG y filter (k=9, σ=1.5)">
-            <figcaption>DoG (y) filter</figcaption>
-          </figure>
+          <figure><img src="assets/part1/1_3/gaussian_kernel.png" alt="Gaussian kernel (k=9, σ=1.5)"><figcaption>Gaussian kernel (k=9, σ=1.5)</figcaption></figure>
+          <figure><img src="assets/part1/1_3/DoGx_k9_s1.5.png" alt="DoG x filter"><figcaption>DoG (x) filter</figcaption></figure>
+          <figure><img src="assets/part1/1_3/DoGy_k9_s1.5.png" alt="DoG y filter"><figcaption>DoG (y) filter</figcaption></figure>
         </div>
-        
-        <div class="prose">
-          <h3>Gaussian blur → finite differences (k=9, σ=1.5)</h3>
-        </div>
+
+        <div class="prose"><h3>Gaussian blur → finite differences (k=9, σ=1.5)</h3></div>
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part1/1_3/cameraman_blur_k9_s1.5.png" alt="Cameraman blurred (k=9, σ=1.5)">
-            <figcaption>Blurred</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/cameraman_blur_Gx_k9_s1.5.png" alt="Gx after blur">
-            <figcaption>Gx (blur → Dx)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/cameraman_blur_Gy_k9_s1.5.png" alt="Gy after blur">
-            <figcaption>Gy (blur → Dy)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/cameraman_blur_gradmag_k9_s1.5.png" alt="Grad mag after blur">
-            <figcaption>Grad magnitude</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/cameraman_blur_edges_T0.20.png" alt="Edges after blur, T=0.20">
-            <figcaption>Edges (T = 0.20)</figcaption>
-          </figure>
+          <figure><img src="assets/part1/1_3/cameraman_blur_k9_s1.5.png" alt="Blurred"><figcaption>Blurred</figcaption></figure>
+          <figure><img src="assets/part1/1_3/cameraman_blur_Gx_k9_s1.5.png" alt="Gx after blur"><figcaption>Gx (blur → Dx)</figcaption></figure>
+          <figure><img src="assets/part1/1_3/cameraman_blur_Gy_k9_s1.5.png" alt="Gy after blur"><figcaption>Gy (blur → Dy)</figcaption></figure>
+          <figure><img src="assets/part1/1_3/cameraman_blur_gradmag_k9_s1.5.png" alt="Grad mag"><figcaption>Grad magnitude</figcaption></figure>
+          <figure><img src="assets/part1/1_3/cameraman_blur_edges_T0.20.png" alt="Edges T=0.20"><figcaption>Edges (T = 0.20)</figcaption></figure>
         </div>
-        
-        <div class="prose">
-          <h3>Single-pass Derivative of Gaussian (DoG)</h3>
-        </div>
+
+        <div class="prose"><h3>Single-pass Derivative of Gaussian (DoG)</h3></div>
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part1/1_3/cameraman_DoG_Gx_k9_s1.5.png" alt="DoG Gx response">
-            <figcaption>DoG Gx response</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/cameraman_DoG_Gy_k9_s1.5.png" alt="DoG Gy response">
-            <figcaption>DoG Gy response</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/cameraman_DoG_gradmag_k9_s1.5.png" alt="DoG grad magnitude">
-            <figcaption>DoG grad magnitude</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/1_3/cameraman_DoG_edges_T0.20.png" alt="DoG edges, T=0.20">
-            <figcaption>DoG edges (T = 0.20)</figcaption>
-          </figure>
+          <figure><img src="assets/part1/1_3/cameraman_DoG_Gx_k9_s1.5.png" alt="DoG Gx"><figcaption>DoG Gx response</figcaption></figure>
+          <figure><img src="assets/part1/1_3/cameraman_DoG_Gy_k9_s1.5.png" alt="DoG Gy"><figcaption>DoG Gy response</figcaption></figure>
+          <figure><img src="assets/part1/1_3/cameraman_DoG_gradmag_k9_s1.5.png" alt="DoG grad mag"><figcaption>DoG grad magnitude</figcaption></figure>
+          <figure><img src="assets/part1/1_3/cameraman_DoG_edges_T0.20.png" alt="DoG edges T=0.20"><figcaption>DoG edges (T = 0.20)</figcaption></figure>
         </div>
+
+        <div class="prose">
+          <h3>Takeaway</h3>
+          <ul>
+            <li><b>Blur→FD</b> suppresses noise then differentiates — good but still leaks textured noise.</li>
+            <li><b>DoG</b> bakes smoothing into the derivative and gives crisper structural edges with fewer false positives.</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <!-- =================
          PART 2: Uses
          ================= -->
+
     <!-- 2.1 Unsharp mask -->
     <section class="section" id="p2-1">
       <div class="container">
         <div class="prose">
           <h2>Part 2.1 — Image “Sharpening” (Unsharp Mask)</h2>
           <p>
-            Unsharp mask adds scaled high frequencies back: <code>I + α(I − G∗I)</code>.
-            I also form a single kernel <code>K = (1+α)δ − αG</code> to do it in one convolution.
-            Below: Taj Mahal (required) and one extra image; plus an amount sweep.
+            Unsharp mask adds back scaled highs: <code>I<sub>sharp</sub> = I + α(I − G∗I)</code>. I also form a single
+            kernel <code>K = (1+α)δ − αG</code> to do it in one convolution. Below: Taj Mahal (required) with an α-sweep,
+            plus a blur→restore test on a sharp image.
           </p>
         </div>
 
-        <!-- Taj Mahal: low/high/sharp variations -->
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part2/2_1/taj_low_k9_s2.0.png" alt="Taj low-pass (k=9, σ=2.0)">
-            <figcaption>Taj — low-pass (blurred)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/taj_high_vis_k9_s2.0.png" alt="Taj high-freq visualization">
-            <figcaption>Taj — high frequencies (vis.)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/taj_sharp_a0.30_k9_s2.0.png" alt="Taj sharpened α=0.30">
-            <figcaption>Sharpened (α = 0.30)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/taj_sharp_a0.80_k9_s2.0.png" alt="Taj sharpened α=0.80">
-            <figcaption>Sharpened (α = 0.80)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/taj_sharp_a1.20_k9_s2.0.png" alt="Taj sharpened α=1.20">
-            <figcaption>Sharpened (α = 1.20)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/taj_sharp_a1.60_k9_s2.0.png" alt="Taj sharpened α=1.60">
-            <figcaption>Sharpened (α = 1.60)</figcaption>
-          </figure>
+          <figure><img src="assets/part2/2_1/taj_low_k9_s2.0.png" alt="Taj low-pass"><figcaption>Taj — low-pass (blurred)</figcaption></figure>
+          <figure><img src="assets/part2/2_1/taj_high_vis_k9_s2.0.png" alt="Taj highs"><figcaption>Taj — high frequencies (vis.)</figcaption></figure>
+          <figure><img src="assets/part2/2_1/taj_sharp_a0.30_k9_s2.0.png" alt="α=0.30"><figcaption>Sharpened (α = 0.30)</figcaption></figure>
+          <figure><img src="assets/part2/2_1/taj_sharp_a0.80_k9_s2.0.png" alt="α=0.80"><figcaption>Sharpened (α = 0.80)</figcaption></figure>
+          <figure><img src="assets/part2/2_1/taj_sharp_a1.20_k9_s2.0.png" alt="α=1.20"><figcaption>Sharpened (α = 1.20)</figcaption></figure>
+          <figure><img src="assets/part2/2_1/taj_sharp_a1.60_k9_s2.0.png" alt="α=1.60"><figcaption>Sharpened (α = 1.60)</figcaption></figure>
           <figure class="span-2">
-            <img src="assets/part2/2_1/taj_sharp_singlekernel_a1.20_k9_s2.0.png" alt="Single-kernel unsharp (α=1.20)">
-            <figcaption>Single-kernel unsharp (α = 1.20) — one-pass convolution</figcaption>
+            <img src="assets/part2/2_1/taj_sharp_singlekernel_a1.20_k9_s2.0.png" alt="single-kernel">
+            <figcaption>Single-kernel unsharp (α = 1.20) — one pass</figcaption>
           </figure>
         </div>
 
-        <!-- Extra: blur a sharp image and restore -->
         <div class="prose">
-          <h3>Extra Evaluation — Blur &amp; Restore</h3>
-          <p>
-            I blurred a sharp image (k=9, σ=2.0) and tried restoring it with different α values
-            to test the unsharp mask’s ability to recover high frequencies.
-          </p>
+          <h3>Extra — Blur &amp; Restore</h3>
+          <p>Blur a sharp image (k=9, σ=2.0) and restore with different α to gauge how much sharpening is “too much.”</p>
         </div>
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part2/2_1/sharp_blurred_k9_s2.0.png" alt="Sharp → blurred">
-            <figcaption>Sharp → blurred (k=9, σ=2.0)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/sharp_blurred_restored_a0.80.png" alt="Restored α=0.80">
-            <figcaption>Restored (α = 0.80)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/sharp_blurred_restored_a1.20.png" alt="Restored α=1.20">
-            <figcaption>Restored (α = 1.20)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_1/sharp_blurred_restored_a1.60.png" alt="Restored α=1.60">
-            <figcaption>Restored (α = 1.60)</figcaption>
-          </figure>
+          <figure><img src="assets/part2/2_1/sharp_blurred_k9_s2.0.png" alt="Sharp→blurred"><figcaption>Sharp → blurred</figcaption></figure>
+          <figure><img src="assets/part2/2_1/sharp_blurred_restored_a0.80.png" alt="restored 0.8"><figcaption>Restored (α = 0.80)</figcaption></figure>
+          <figure><img src="assets/part2/2_1/sharp_blurred_restored_a1.20.png" alt="restored 1.2"><figcaption>Restored (α = 1.20)</figcaption></figure>
+          <figure><img src="assets/part2/2_1/sharp_blurred_restored_a1.60.png" alt="restored 1.6"><figcaption>Restored (α = 1.60)</figcaption></figure>
         </div>
       </div>
     </section>
@@ -247,256 +215,188 @@
         <div class="prose">
           <h2>Part 2.2 — Hybrid Images</h2>
           <p>
-            Hybrids are formed by adding a low-pass version of image A to a high-pass version of image B.
-            Below I show one pair with the full pipeline (alignment, filters, FFTs, and cutoff sweep),
-            followed by two more pairs with inputs and final results.
+            Hybrids add a low-pass of A to a high-pass of B. Up close, the highs dominate; far away, only lows remain.
+            I show the full pipeline once (with FFTs), then two more pairs (inputs + result).
           </p>
         </div>
 
-        <!-- ===== Full pipeline: Derek + Cat ===== -->
-        <div class="prose">
-          <h3>Derek + Cat — full pipeline</h3>
-          <p>Cutoff choice explored: σ<sub>A</sub> ∈ {6, 8, 10}, σ<sub>B</sub> ∈ {3, 4}.</p>
+        <!-- Full pipeline: Derek + Cat -->
+        <div class="prose"><h3>Derek + Cat — full pipeline</h3>
+          <p>Cutoff sweep: σ<sub>A</sub> ∈ {6, 8, 10}, σ<sub>B</sub> ∈ {3, 4}.</p>
         </div>
-
-        <!-- Inputs -->
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_input.png" alt="Derek (A)">
-            <figcaption>Source A (Derek)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_input.png" alt="Cat (B)">
-            <figcaption>Source B (Cat)</figcaption></figure>
-        </div>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_input.png" alt="A input"><figcaption>Source A (Derek)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_input.png" alt="B input"><figcaption>Source B (Cat)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s8.0.png" alt="A low"><figcaption>A low-pass (σ=8)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_high_vis_s4.0.png" alt="B high"><figcaption>B high (σ=4, vis.)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA8.0_sB4.0.png" alt="hybrid"><figcaption>Hybrid (σ<sub>A</sub>=8, σ<sub>B</sub>=4)</figcaption></figure>
 
-        <!-- Filtered results (a few representative settings) -->
-        <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s6.0.png" alt="A low s=6.0">
-            <figcaption>A low-pass (σ=6.0)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s8.0.png" alt="A low s=8.0">
-            <figcaption>A low-pass (σ=8.0)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s10.0.png" alt="A low s=10.0">
-            <figcaption>A low-pass (σ=10.0)</figcaption></figure>
-
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_high_vis_s3.0.png" alt="B high s=3.0">
-            <figcaption>B high-pass (σ=3.0, vis.)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_high_vis_s4.0.png" alt="B high s=4.0">
-            <figcaption>B high-pass (σ=4.0, vis.)</figcaption></figure>
-        </div>
-
-        <!-- FFTs -->
-        <div class="figure-grid">
           <figure><img src="assets/part2/2_2/derek_cat/fft_A.png" alt="FFT A"><figcaption>log|FFT(A)|</figcaption></figure>
           <figure><img src="assets/part2/2_2/derek_cat/fft_B.png" alt="FFT B"><figcaption>log|FFT(B)|</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/fft_A_low.png" alt="FFT A_low"><figcaption>log|FFT(A<sub>low</sub>)|</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/fft_B_high.png" alt="FFT B_high"><figcaption>log|FFT(B<sub>high</sub>)|</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/fft_A_low.png" alt="FFT Alow"><figcaption>log|FFT(A<sub>low</sub>)|</figcaption></figure>
+          <figure><img src="assets/part2/2_2/derek_cat/fft_B_high.png" alt="FFT Bhigh"><figcaption>log|FFT(B<sub>high</sub>)|</figcaption></figure>
           <figure><img src="assets/part2/2_2/derek_cat/fft_H.png" alt="FFT Hybrid"><figcaption>log|FFT(Hybrid)|</figcaption></figure>
         </div>
 
-        <!-- Results for a few (σA, σB) -->
+        <!-- Hybrid #2: Vader + Anakin -->
+        <div class="prose"><h3>Hybrid #2 — Vader + Anakin</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA6.0_sB3.0.png" alt="result sA6 sB3">
-            <figcaption>Hybrid (σ<sub>A</sub>=6.0, σ<sub>B</sub>=3.0)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA8.0_sB4.0.png" alt="result sA8 sB4">
-            <figcaption>Hybrid (σ<sub>A</sub>=8.0, σ<sub>B</sub>=4.0)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA10.0_sB4.0.png" alt="result sA10 sB4">
-            <figcaption>Hybrid (σ<sub>A</sub>=10.0, σ<sub>B</sub>=4.0)</figcaption></figure>
+          <figure><img src="assets/part2/2_2/vader_anakin/hyb_A_input.png" alt="Vader/Anakin A"><figcaption>Source A</figcaption></figure>
+          <figure><img src="assets/part2/2_2/vader_anakin/hyb_B_input.png" alt="Vader/Anakin B"><figcaption>Source B</figcaption></figure>
+          <figure><img src="assets/part2/2_2/vader_anakin/BEST_hyb_result_sA4.0_sB3.0.png" alt="Hybrid"><figcaption>Hybrid result</figcaption></figure>
         </div>
 
-        <!-- ===== Hybrid #2: Vader + Anakin (inputs + final) ===== -->
-        <div class="prose">
-          <h3>Hybrid #2 — Vader + Anakin</h3>
-        </div>
+        <!-- Hybrid #3: Walter + Heisenberg -->
+        <div class="prose"><h3>Hybrid #3 — Walter + Heisenberg</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/vader_anakin/hyb_A_input.png" alt="Vader/Anakin A">
-            <figcaption>Source A</figcaption></figure>
-          <figure><img src="assets/part2/2_2/vader_anakin/hyb_B_input.png" alt="Vader/Anakin B">
-            <figcaption>Source B</figcaption></figure>
-          <figure><img src="assets/part2/2_2/vader_anakin/BEST_hyb_result_sA4.0_sB3.0.png" alt="Vader+Anakin hybrid">
-            <figcaption>Hybrid result</figcaption></figure>
-        </div>
-
-        <!-- ===== Hybrid #3: Walter + Heisenberg (inputs + final) ===== -->
-        <div class="prose">
-          <h3>Hybrid #3 — Walter + Heisenberg</h3>
-        </div>
-        <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_A_input.png" alt="Walter/Heisenberg A">
-            <figcaption>Source A</figcaption></figure>
-          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_B_input.png" alt="Walter/Heisenberg B">
-            <figcaption>Source B</figcaption></figure>
-          <figure><img src="assets/part2/2_2/walter_heisenberg/BEST_hyb_result_sA4.0_sB3.0.png" alt="Walter+Heisenberg hybrid">
-            <figcaption>Hybrid result</figcaption></figure>
+          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_A_input.png" alt="Walter/Heisenberg A"><figcaption>Source A</figcaption></figure>
+          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_B_input.png" alt="Walter/Heisenberg B"><figcaption>Source B</figcaption></figure>
+          <figure><img src="assets/part2/2_2/walter_heisenberg/BEST_hyb_result_sA4.0_sB3.0.png" alt="Hybrid"><figcaption>Hybrid result</figcaption></figure>
         </div>
       </div>
     </section>
 
-    <!-- 2.3 Gaussian & Laplacian Stacks (no blending yet) -->
+    <!-- 2.3 Gaussian & Laplacian Stacks -->
     <section class="section" id="p2-3">
       <div class="container">
         <div class="prose">
           <h2>Part 2.3 — Gaussian &amp; Laplacian Stacks (Apple &amp; Orange)</h2>
           <p>
-            I build <em>stacks</em> (no downsampling): each Gaussian level is further blurred from the previous,
-            and each Laplacian level is the band-pass difference between consecutive Gaussians. At the end I
-            reconstruct the image by summing all Laplacian levels plus the coarsest Gaussian.
+            Stacks (no downsampling): each Gaussian level further blurs the previous; each Laplacian level is the
+            band-pass difference between consecutive Gaussians. Reconstruction ≈ sum of Laplacians + coarsest Gaussian.
           </p>
         </div>
 
-        <!-- Apple: Gaussian stack -->
         <div class="prose"><h3>Apple — Gaussian stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/apple_gauss_L0.png" alt="Apple Gaussian L0"><figcaption>G L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L1.png" alt="Apple Gaussian L1"><figcaption>G L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L2.png" alt="Apple Gaussian L2"><figcaption>G L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L3.png" alt="Apple Gaussian L3"><figcaption>G L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L4.png" alt="Apple Gaussian L4"><figcaption>G L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L5.png" alt="Apple Gaussian L5"><figcaption>G L5</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L0.png" alt="Apple G0"><figcaption>G L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L1.png" alt="Apple G1"><figcaption>G L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L2.png" alt="Apple G2"><figcaption>G L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L3.png" alt="Apple G3"><figcaption>G L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L4.png" alt="Apple G4"><figcaption>G L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_gauss_L5.png" alt="Apple G5"><figcaption>G L5</figcaption></figure>
         </div>
 
-        <!-- Apple: Laplacian stack -->
         <div class="prose"><h3>Apple — Laplacian stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/apple_lap_L0.png" alt="Apple Laplacian L0"><figcaption>L L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L1.png" alt="Apple Laplacian L1"><figcaption>L L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L2.png" alt="Apple Laplacian L2"><figcaption>L L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L3.png" alt="Apple Laplacian L3"><figcaption>L L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L4.png" alt="Apple Laplacian L4"><figcaption>L L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L5.png" alt="Apple Laplacian L5"><figcaption>L L5</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L0.png" alt="Apple L0"><figcaption>L L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L1.png" alt="Apple L1"><figcaption>L L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L2.png" alt="Apple L2"><figcaption>L L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L3.png" alt="Apple L3"><figcaption>L L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L4.png" alt="Apple L4"><figcaption>L L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/apple_lap_L5.png" alt="Apple L5"><figcaption>L L5</figcaption></figure>
         </div>
 
-        <!-- Apple: reconstruction check -->
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part2/2_3/apple_reconstructed.png" alt="Apple reconstructed from stacks">
+            <img src="assets/part2/2_3/apple_reconstructed.png" alt="Apple reconstructed">
             <figcaption>Apple — reconstruction from Laplacian stack + coarsest Gaussian</figcaption>
           </figure>
         </div>
 
-        <!-- Orange: Gaussian stack -->
         <div class="prose"><h3>Orange — Gaussian stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/orange_gauss_L0.png" alt="Orange Gaussian L0"><figcaption>G L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L1.png" alt="Orange Gaussian L1"><figcaption>G L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L2.png" alt="Orange Gaussian L2"><figcaption>G L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L3.png" alt="Orange Gaussian L3"><figcaption>G L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L4.png" alt="Orange Gaussian L4"><figcaption>G L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L5.png" alt="Orange Gaussian L5"><figcaption>G L5</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L0.png" alt="Orange G0"><figcaption>G L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L1.png" alt="Orange G1"><figcaption>G L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L2.png" alt="Orange G2"><figcaption>G L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L3.png" alt="Orange G3"><figcaption>G L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L4.png" alt="Orange G4"><figcaption>G L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_gauss_L5.png" alt="Orange G5"><figcaption>G L5</figcaption></figure>
         </div>
 
-        <!-- Orange: Laplacian stack -->
         <div class="prose"><h3>Orange — Laplacian stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/orange_lap_L0.png" alt="Orange Laplacian L0"><figcaption>L L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L1.png" alt="Orange Laplacian L1"><figcaption>L L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L2.png" alt="Orange Laplacian L2"><figcaption>L L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L3.png" alt="Orange Laplacian L3"><figcaption>L L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L4.png" alt="Orange Laplacian L4"><figcaption>L L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L5.png" alt="Orange Laplacian L5"><figcaption>L L5</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L0.png" alt="Orange L0"><figcaption>L L0</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L1.png" alt="Orange L1"><figcaption>L L1</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L2.png" alt="Orange L2"><figcaption>L L2</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L3.png" alt="Orange L3"><figcaption>L L3</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L4.png" alt="Orange L4"><figcaption>L L4</figcaption></figure>
+          <figure><img src="assets/part2/2_3/orange_lap_L5.png" alt="Orange L5"><figcaption>L L5</figcaption></figure>
         </div>
 
-        <!-- Orange: reconstruction check -->
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part2/2_3/orange_reconstructed.png" alt="Orange reconstructed from stacks">
+            <img src="assets/part2/2_3/orange_reconstructed.png" alt="Orange reconstructed">
             <figcaption>Orange — reconstruction from Laplacian stack + coarsest Gaussian</figcaption>
           </figure>
         </div>
 
         <div class="prose">
           <p class="notes">
-            Reconstruction sanity check: the reconstructed images closely match the originals (small differences only from
-            numeric rounding and border handling). These stacks will be used for multi-resolution blending in Part 2.4.
+            Reconstruction closely matches the originals (small differences from numeric rounding/borders).
+            These stacks are re-used for multiresolution blending in Part 2.4.
           </p>
         </div>
       </div>
     </section>
-    
-    <!-- 2.4 Multiresolution Blending (Oraple + Custom Pairs) -->
+
+    <!-- 2.4 Multiresolution Blending -->
     <section class="section" id="p2-4">
       <div class="container">
         <div class="prose">
           <h2>Part 2.4 — Multiresolution Blending (a.k.a. the oraple!)</h2>
           <p>
-            Using the Gaussian/Laplacian stacks from Part 2.3, I blend images across frequency bands. A smooth
-            transition is achieved by applying the same Gaussian stack to the mask, so coarse bands blend broadly
-            and fine bands blend tightly, avoiding hard seams.
+            Using the stacks from Part 2.3, I blend A and B at each frequency band using a <emGaussian-blurred mask</em>.
+            Coarse bands blend broadly; fine bands transition tightly—this removes hard seams.
           </p>
         </div>
 
-        <!-- Oraple (vertical seam) -->
+        <!-- Oraple -->
         <div class="prose"><h3>Recreating the “Oraple”</h3></div>
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part2/2_4/oraple_apple.png" alt="Apple">
-            <figcaption>Apple</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4/oraple_orange.png" alt="Orange">
-            <figcaption>Orange</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4/mask_vertical.png" alt="Vertical step mask">
-            <figcaption>Vertical step mask</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4/oraple_vertical.png" alt="Oraple multires blend">
-            <figcaption>Recreated “oraple” (multires blend)</figcaption>
-          </figure>
+          <figure><img src="assets/part2/2_4/oraple_apple.png" alt="Apple"><figcaption>Apple</figcaption></figure>
+          <figure><img src="assets/part2/2_4/oraple_orange.png" alt="Orange"><figcaption>Orange</figcaption></figure>
+          <figure><img src="assets/part2/2_4/mask_vertical.png" alt="Vertical step mask"><figcaption>Vertical step mask</figcaption></figure>
+          <figure><img src="assets/part2/2_4/oraple_vertical.png" alt="Oraple multires blend"><figcaption>Recreated “oraple”</figcaption></figure>
         </div>
 
-        <!-- Custom Pair 1: Batman ↔ Joker (vertical seam) -->
+        <!-- Custom Pair 1: Batman/Joker -->
         <div class="prose"><h3>Custom Pair #1 — Batman ↔ Joker (vertical seam)</h3></div>
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part2/2_4_pairs/bj_batman.png" alt="Batman input">
-            <figcaption>Input A — Batman</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4_pairs/bj_joker.png" alt="Joker input">
-            <figcaption>Input B — Joker</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4_pairs/mask_vertical_batman_joker.png" alt="Vertical mask (centered)">
-            <figcaption>Vertical mask (light feather)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4_pairs/bj_vertical_blend.png" alt="Batman/Joker multires blend">
-            <figcaption>Multires blend — centered seam</figcaption>
-          </figure>
+          <figure><img src="assets/part2/2_4_pairs/bj_batman.png" alt="Batman"><figcaption>Input A — Batman</figcaption></figure>
+          <figure><img src="assets/part2/2_4_pairs/bj_joker.png" alt="Joker"><figcaption>Input B — Joker</figcaption></figure>
+          <figure><img src="assets/part2/2_4_pairs/mask_vertical_batman_joker.png" alt="Mask"><figcaption>Vertical mask (light feather)</figcaption></figure>
+          <figure><img src="assets/part2/2_4_pairs/bj_vertical_blend.png" alt="Blend"><figcaption>Multires blend — centered seam</figcaption></figure>
         </div>
 
-        <!-- Custom Pair 2: Lamborghinis (irregular mask) -->
+        <!-- Custom Pair 2: Lamborghinis -->
         <div class="prose">
           <h3>Custom Pair #2 — Lamborghinis (irregular, hand-drawn mask)</h3>
           <p>
-            I painted a jagged mask around the blue car’s rear half. Below are (1) a simple alpha composite to
-            visualize the mask’s silhouette and (2) the final multiresolution blend which reduces haloing by
-            smoothing the mask per frequency band.
+            I painted a jagged mask around the blue car’s rear half. Left: simple alpha composite to visualize the mask;
+            right: multiresolution blend that reduces haloing by smoothing the mask per band.
           </p>
         </div>
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part2/2_4_pairs/lambo_simple_blend_whiteKeepsBLUE.png" alt="Lambo simple alpha (white keeps blue)">
-            <figcaption>Simple alpha (white keeps BLUE)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsBLUE.png" alt="Lambo multires jagged blend (white keeps blue)">
-            <figcaption>Multires blend (white keeps BLUE)</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsGOLD.png" alt="Lambo multires jagged blend (white keeps gold)">
-            <figcaption>Multires blend (white keeps GOLD)</figcaption>
-          </figure>
+          <figure><img src="assets/part2/2_4_pairs/lambo_simple_blend_whiteKeepsBLUE.png" alt="Lambo alpha"><figcaption>Simple alpha (white keeps BLUE)</figcaption></figure>
+          <figure><img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsBLUE.png" alt="Lambo multires"><figcaption>Multires blend (white keeps BLUE)</figcaption></figure>
+          <figure><img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsGOLD.png" alt="Lambo multires gold"><figcaption>Multires blend (white keeps GOLD)</figcaption></figure>
         </div>
 
         <div class="prose">
           <p class="notes">
-            Notes: For hard-edged, high-contrast boundaries (like car silhouettes), the multires blend clearly
-            outperforms a single-scale alpha composite, especially near the mask edge where ringing or halos
-            would otherwise appear.
+            For hard-edged, high-contrast boundaries (e.g., car silhouettes), multires blending clearly outperforms a
+            single-scale alpha composite, especially near the transition edge where ringing/halos would otherwise appear.
           </p>
         </div>
       </div>
     </section>
+
+    <!-- Wrap-up -->
+    <section class="section" id="takeaways">
+      <div class="container">
+        <div class="prose">
+          <h2>Takeaways</h2>
+          <ul>
+            <li><b>Filtering = frequency sculpting:</b> Gaussian removes highs; DoG detects edges while suppressing noise.</li>
+            <li><b>Sharpening = controlled boost of highs:</b> α controls “crispy vs. crunchy.” Too large amplifies noise/halos.</li>
+            <li><b>Hybrids:</b> perception flips with viewing distance because the visual system attends to different bands.</li>
+            <li><b>Stacks matter:</b> blending at multiple bands lets seams fade naturally from coarse→fine detail.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer>
