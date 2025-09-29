@@ -379,76 +379,97 @@
 
     <!-- 2.3 Gaussian & Laplacian Stacks -->
     <section class="section" id="p2-3">
-      <div class="container">
+        <div class="container">
         <div class="prose">
-          <h2>Part 2.3 — Gaussian &amp; Laplacian Stacks (Apple &amp; Orange)</h2>
-          <p>
-            Stacks (no downsampling): each Gaussian level further blurs the previous; each Laplacian level is the
-            band-pass difference between consecutive Gaussians. Reconstruction ≈ sum of Laplacians + coarsest Gaussian.
-          </p>
+            <h2>Part 2.3 — Gaussian &amp; Laplacian Stacks (Apple &amp; Orange)</h2>
+            <p>
+            A <strong>Gaussian stack</strong> is a set of images where each level is progressively blurred
+            by a Gaussian filter (no downsampling — the resolution stays the same).  
+            A <strong>Laplacian stack</strong> is the set of <em>band-pass</em> images formed by subtracting
+            consecutive Gaussian levels: <code>L<sub>k</sub> = G<sub>k</sub> − G<sub>k+1</sub></code>.
+            </p>
+            <p>
+            Intuitively, the Gaussian stack captures image content from coarse to fine scales,
+            while the Laplacian stack isolates details at each frequency band.  
+            To reconstruct the original image, we sum all Laplacian levels and add back the coarsest
+            Gaussian (top level):  
+            <code>I ≈ L<sub>0</sub> + L<sub>1</sub> + … + L<sub>n−1</sub> + G<sub>n</sub></code>.
+            </p>
+            <p>
+            These stacks are the foundation for <strong>multi-resolution blending</strong> (Part&nbsp;2.4)
+            because they let us combine images smoothly at each frequency scale.
+            </p>
         </div>
-
-        <div class="prose"><h3>Apple — Gaussian stack</h3></div>
+    
+        <!-- Apple: Gaussian stack -->
+        <div class="prose"><h3>Apple — Gaussian Stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/apple_gauss_L0.png" alt="Apple G0"><figcaption>G L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L1.png" alt="Apple G1"><figcaption>G L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L2.png" alt="Apple G2"><figcaption>G L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L3.png" alt="Apple G3"><figcaption>G L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L4.png" alt="Apple G4"><figcaption>G L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_gauss_L5.png" alt="Apple G5"><figcaption>G L5</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_gauss_L0.png" alt="Apple G0"><figcaption>G L0 — original</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_gauss_L1.png" alt="Apple G1"><figcaption>G L1</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_gauss_L2.png" alt="Apple G2"><figcaption>G L2</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_gauss_L3.png" alt="Apple G3"><figcaption>G L3</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_gauss_L4.png" alt="Apple G4"><figcaption>G L4</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_gauss_L5.png" alt="Apple G5"><figcaption>G L5 — very blurred</figcaption></figure>
         </div>
-
-        <div class="prose"><h3>Apple — Laplacian stack</h3></div>
+    
+        <!-- Apple: Laplacian stack -->
+        <div class="prose"><h3>Apple — Laplacian Stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/apple_lap_L0.png" alt="Apple L0"><figcaption>L L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L1.png" alt="Apple L1"><figcaption>L L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L2.png" alt="Apple L2"><figcaption>L L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L3.png" alt="Apple L3"><figcaption>L L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L4.png" alt="Apple L4"><figcaption>L L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/apple_lap_L5.png" alt="Apple L5"><figcaption>L L5</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_lap_L0.png" alt="Apple L0"><figcaption>L L0 — finest details</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_lap_L1.png" alt="Apple L1"><figcaption>L L1</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_lap_L2.png" alt="Apple L2"><figcaption>L L2</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_lap_L3.png" alt="Apple L3"><figcaption>L L3</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_lap_L4.png" alt="Apple L4"><figcaption>L L4</figcaption></figure>
+            <figure><img src="assets/part2/2_3/apple_lap_L5.png" alt="Apple L5"><figcaption>L L5 — coarsest band</figcaption></figure>
         </div>
-
+    
+        <!-- Apple reconstruction -->
         <div class="figure-grid">
-          <figure class="span-2">
+            <figure class="span-2">
             <img src="assets/part2/2_3/apple_reconstructed.png" alt="Apple reconstructed">
-            <figcaption>Apple — reconstruction from Laplacian stack + coarsest Gaussian</figcaption>
-          </figure>
+            <figcaption>Apple — reconstructed from Laplacian stack + coarsest Gaussian</figcaption>
+            </figure>
         </div>
-
-        <div class="prose"><h3>Orange — Gaussian stack</h3></div>
+    
+        <!-- Orange: Gaussian stack -->
+        <div class="prose"><h3>Orange — Gaussian Stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/orange_gauss_L0.png" alt="Orange G0"><figcaption>G L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L1.png" alt="Orange G1"><figcaption>G L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L2.png" alt="Orange G2"><figcaption>G L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L3.png" alt="Orange G3"><figcaption>G L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L4.png" alt="Orange G4"><figcaption>G L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_gauss_L5.png" alt="Orange G5"><figcaption>G L5</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_gauss_L0.png" alt="Orange G0"><figcaption>G L0 — original</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_gauss_L1.png" alt="Orange G1"><figcaption>G L1</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_gauss_L2.png" alt="Orange G2"><figcaption>G L2</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_gauss_L3.png" alt="Orange G3"><figcaption>G L3</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_gauss_L4.png" alt="Orange G4"><figcaption>G L4</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_gauss_L5.png" alt="Orange G5"><figcaption>G L5 — very blurred</figcaption></figure>
         </div>
-
-        <div class="prose"><h3>Orange — Laplacian stack</h3></div>
+    
+        <!-- Orange: Laplacian stack -->
+        <div class="prose"><h3>Orange — Laplacian Stack</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_3/orange_lap_L0.png" alt="Orange L0"><figcaption>L L0</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L1.png" alt="Orange L1"><figcaption>L L1</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L2.png" alt="Orange L2"><figcaption>L L2</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L3.png" alt="Orange L3"><figcaption>L L3</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L4.png" alt="Orange L4"><figcaption>L L4</figcaption></figure>
-          <figure><img src="assets/part2/2_3/orange_lap_L5.png" alt="Orange L5"><figcaption>L L5</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_lap_L0.png" alt="Orange L0"><figcaption>L L0 — finest details</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_lap_L1.png" alt="Orange L1"><figcaption>L L1</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_lap_L2.png" alt="Orange L2"><figcaption>L L2</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_lap_L3.png" alt="Orange L3"><figcaption>L L3</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_lap_L4.png" alt="Orange L4"><figcaption>L L4</figcaption></figure>
+            <figure><img src="assets/part2/2_3/orange_lap_L5.png" alt="Orange L5"><figcaption>L L5 — coarsest band</figcaption></figure>
         </div>
-
+    
+        <!-- Orange reconstruction -->
         <div class="figure-grid">
-          <figure class="span-2">
+            <figure class="span-2">
             <img src="assets/part2/2_3/orange_reconstructed.png" alt="Orange reconstructed">
-            <figcaption>Orange — reconstruction from Laplacian stack + coarsest Gaussian</figcaption>
-          </figure>
+            <figcaption>Orange — reconstructed from Laplacian stack + coarsest Gaussian</figcaption>
+            </figure>
         </div>
-
-        <div class="prose">
-          <p class="notes">
-            Reconstruction closely matches the originals (small differences from numeric rounding/borders).
-            These stacks are re-used for multiresolution blending in Part 2.4.
-          </p>
+    
+        <div class="prose notes">
+            <p>
+            <strong>Observations:</strong> The reconstructions are nearly identical to the originals, with only
+            small differences at the borders (due to padding and floating-point rounding).  
+            This confirms our stack decomposition works correctly — a key step for the multi-resolution blending
+            in Part&nbsp;2.4.
+            </p>
         </div>
-      </div>
+        </div>
     </section>
 
     <!-- 2.4 Multiresolution Blending -->
