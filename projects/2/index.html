@@ -250,12 +250,13 @@
         <div class="prose">
             <h3>Extra — Blur &amp; Restore</h3>
             <p>
-            To test how well unsharp masking recovers lost detail, I intentionally blurred a
-            sharp image (Gaussian σ = 2.0) and applied different <code>α</code> values.
-            Lower α partially recovers edges; higher α can over-shoot and cause halos.
+            I also tried intentionally blurring an image that was sharp and tried sharpening it again to restore it. This does not work because we already lost information when we blurred it that we cannot magically regain. Sharpening with the unsharp mask filter only works when there are existing high frequencies we can amplify. This also has limits, because at too high alpha levels, an image will look very coarse and unnatural.
             </p>
         </div>
         <div class="figure-grid">
+            <figure>
+                <img src="assets/part2/2_1/sharp.jpg" alt="Original">
+                <figcaption>Original</figcaption>
             <figure>
             <img src="assets/part2/2_1/sharp_blurred_k9_s2.0.png" alt="Sharp→blurred">
             <figcaption>Sharp → blurred</figcaption>
@@ -276,10 +277,7 @@
     
         <div class="prose notes">
             <p>
-            <strong>Observations:</strong> Unsharp masking works because a Gaussian blur removes
-            fine details; subtracting it gives a band-pass layer of edges and textures.
-            Adding that layer back amplifies details. However, too large an α
-            can cause bright/dark halos and emphasize noise.
+            <strong>Observations:</strong> We are not able to fully recover the lost information from the original image.
             </p>
         </div>
         </div>
@@ -287,49 +285,99 @@
 
     <!-- 2.2 Hybrid images -->
     <section class="section" id="p2-2">
-      <div class="container">
+        <div class="container">
         <div class="prose">
-          <h2>Part 2.2 — Hybrid Images</h2>
-          <p>
-            Hybrids add a low-pass of A to a high-pass of B. Up close, the highs dominate; far away, only lows remain.
-            I show the full pipeline once (with FFTs), then two more pairs (inputs + result).
-          </p>
+            <h2>Part 2.2 — Hybrid Images</h2>
+            <p>
+            A <strong>hybrid image</strong> combines the <em>low frequencies</em> of one image with the
+            <em>high frequencies</em> of another. Up close, the high-frequency details dominate, so we see
+            image <strong>B</strong>. From far away (or when the image is small), the high frequencies
+            fade and only the low-frequency content of <strong>A</strong> remains visible.
+            </p>
+            <p>
+            Mathematically, we apply a Gaussian blur with standard deviation σ<sub>A</sub> to get
+            <code>A<sub>low</sub> = G<sub>σA</sub> * A</code>, then subtract a blurred version of B to
+            get its high frequencies <code>B<sub>high</sub> = B − G<sub>σB</sub>*B</code>, and finally combine:
+            </p>
+            <p class="formula">
+            <code>H = A<sub>low</sub> + B<sub>high</sub></code>
+            </p>
+            <p>
+            The choice of cutoffs σ<sub>A</sub> and σ<sub>B</sub> is critical: too small and A keeps too
+            much edge detail; too large and B’s structure may vanish. In frequency space, this is
+            literally a low-pass + high-pass decomposition.
+            </p>
         </div>
-
-        <!-- Full pipeline: Derek + Cat -->
-        <div class="prose"><h3>Derek + Cat — full pipeline</h3>
-          <p>Cutoff sweep: σ<sub>A</sub> ∈ {6, 8, 10}, σ<sub>B</sub> ∈ {3, 4}.</p>
+    
+        <!-- ===== Full pipeline: Derek + Cat ===== -->
+        <div class="prose">
+            <h3>Example 1 — Derek + Cat (full pipeline)</h3>
+            <p>
+            I explored cutoff settings σ<sub>A</sub> ∈ {6, 8, 10} and σ<sub>B</sub> ∈ {3, 4}.  
+            Below: the original inputs, filtered results, and frequency spectra. Notice how
+            A’s spectrum retains only the low center, while B’s keeps outer rings.
+            </p>
+        </div>
+    
+        <!-- Inputs -->
+        <div class="figure-grid">
+            <figure><img src="assets/part2/2_2/derek_cat/hyb_A_input.png" alt="A input"><figcaption>Source A — Derek (low-pass)</figcaption></figure>
+            <figure><img src="assets/part2/2_2/derek_cat/hyb_B_input.png" alt="B input"><figcaption>Source B — Cat (high-pass)</figcaption></figure>
+        </div>
+    
+        <!-- Filtered versions -->
+        <div class="figure-grid">
+            <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s8.0.png" alt="A low"><figcaption>A after Gaussian (σ = 8)</figcaption></figure>
+            <figure><img src="assets/part2/2_2/derek_cat/hyb_B_high_vis_s4.0.png" alt="B high"><figcaption>B high-pass (σ = 4, visualized)</figcaption></figure>
+            <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA8.0_sB4.0.png" alt="hybrid"><figcaption>Hybrid (σ<sub>A</sub> = 8, σ<sub>B</sub> = 4)</figcaption></figure>
+        </div>
+    
+        <!-- FFTs -->
+        <div class="figure-grid">
+            <figure><img src="assets/part2/2_2/derek_cat/fft_A.png" alt="FFT A"><figcaption>log|FFT(A)|</figcaption></figure>
+            <figure><img src="assets/part2/2_2/derek_cat/fft_B.png" alt="FFT B"><figcaption>log|FFT(B)|</figcaption></figure>
+            <figure><img src="assets/part2/2_2/derek_cat/fft_A_low.png" alt="FFT Alow"><figcaption>log|FFT(A<sub>low</sub>)|</figcaption></figure>
+            <figure><img src="assets/part2/2_2/derek_cat/fft_B_high.png" alt="FFT Bhigh"><figcaption>log|FFT(B<sub>high</sub>)|</figcaption></figure>
+            <figure><img src="assets/part2/2_2/derek_cat/fft_H.png" alt="FFT Hybrid"><figcaption>log|FFT(Hybrid)|</figcaption></figure>
+        </div>
+    
+        <!-- ===== Hybrid #2: Vader + Anakin ===== -->
+        <div class="prose">
+            <h3>Example 2 — Vader + Anakin</h3>
+            <p>
+            A subtle low-pass on Anakin combined with a sharper Vader gives a hybrid that looks like
+            Vader up close but fades to Anakin when viewed from afar.
+            </p>
         </div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_input.png" alt="A input"><figcaption>Source A (Derek)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_input.png" alt="B input"><figcaption>Source B (Cat)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_A_low_s8.0.png" alt="A low"><figcaption>A low-pass (σ=8)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_B_high_vis_s4.0.png" alt="B high"><figcaption>B high (σ=4, vis.)</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/hyb_result_sA8.0_sB4.0.png" alt="hybrid"><figcaption>Hybrid (σ<sub>A</sub>=8, σ<sub>B</sub>=4)</figcaption></figure>
-
-          <figure><img src="assets/part2/2_2/derek_cat/fft_A.png" alt="FFT A"><figcaption>log|FFT(A)|</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/fft_B.png" alt="FFT B"><figcaption>log|FFT(B)|</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/fft_A_low.png" alt="FFT Alow"><figcaption>log|FFT(A<sub>low</sub>)|</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/fft_B_high.png" alt="FFT Bhigh"><figcaption>log|FFT(B<sub>high</sub>)|</figcaption></figure>
-          <figure><img src="assets/part2/2_2/derek_cat/fft_H.png" alt="FFT Hybrid"><figcaption>log|FFT(Hybrid)|</figcaption></figure>
+            <figure><img src="assets/part2/2_2/vader_anakin/hyb_A_input.png" alt="Vader/Anakin A"><figcaption>Source A (low-pass)</figcaption></figure>
+            <figure><img src="assets/part2/2_2/vader_anakin/hyb_B_input.png" alt="Vader/Anakin B"><figcaption>Source B (high-pass)</figcaption></figure>
+            <figure><img src="assets/part2/2_2/vader_anakin/BEST_hyb_result_sA4.0_sB3.0.png" alt="Hybrid"><figcaption>Hybrid result</figcaption></figure>
         </div>
-
-        <!-- Hybrid #2: Vader + Anakin -->
-        <div class="prose"><h3>Hybrid #2 — Vader + Anakin</h3></div>
+    
+        <!-- ===== Hybrid #3: Walter + Heisenberg ===== -->
+        <div class="prose">
+            <h3>Example 3 — Walter + Heisenberg</h3>
+            <p>
+            Similar effect: Walter’s softer features form the base layer, while Heisenberg’s sharp
+            glasses and hat dominate at close range. Great test of how high-pass edges drive recognition.
+            </p>
+        </div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/vader_anakin/hyb_A_input.png" alt="Vader/Anakin A"><figcaption>Source A</figcaption></figure>
-          <figure><img src="assets/part2/2_2/vader_anakin/hyb_B_input.png" alt="Vader/Anakin B"><figcaption>Source B</figcaption></figure>
-          <figure><img src="assets/part2/2_2/vader_anakin/BEST_hyb_result_sA4.0_sB3.0.png" alt="Hybrid"><figcaption>Hybrid result</figcaption></figure>
+            <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_A_input.png" alt="Walter/Heisenberg A"><figcaption>Source A (low-pass)</figcaption></figure>
+            <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_B_input.png" alt="Walter/Heisenberg B"><figcaption>Source B (high-pass)</figcaption></figure>
+            <figure><img src="assets/part2/2_2/walter_heisenberg/BEST_hyb_result_sA4.0_sB3.0.png" alt="Hybrid"><figcaption>Hybrid result</figcaption></figure>
         </div>
-
-        <!-- Hybrid #3: Walter + Heisenberg -->
-        <div class="prose"><h3>Hybrid #3 — Walter + Heisenberg</h3></div>
-        <div class="figure-grid">
-          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_A_input.png" alt="Walter/Heisenberg A"><figcaption>Source A</figcaption></figure>
-          <figure><img src="assets/part2/2_2/walter_heisenberg/hyb_B_input.png" alt="Walter/Heisenberg B"><figcaption>Source B</figcaption></figure>
-          <figure><img src="assets/part2/2_2/walter_heisenberg/BEST_hyb_result_sA4.0_sB3.0.png" alt="Hybrid"><figcaption>Hybrid result</figcaption></figure>
+    
+        <div class="prose notes">
+            <p>
+            <strong>Observations:</strong> Hybrids rely on the human visual system: high frequencies are
+            easier to see at close distances, but low frequencies dominate when viewed small or far away.
+            Choosing good cutoffs is key — too much overlap and the images “ghost,” too little and one
+            image disappears entirely.
+            </p>
         </div>
-      </div>
+        </div>
     </section>
 
     <!-- 2.3 Gaussian & Laplacian Stacks -->
