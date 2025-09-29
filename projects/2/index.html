@@ -507,35 +507,22 @@
         <div class="figure-grid">
             <figure><img src="assets/part2/2_4_pairs/bj_batman.png" alt="Batman"><figcaption>Input A — Batman</figcaption></figure>
             <figure><img src="assets/part2/2_4_pairs/bj_joker.png" alt="Joker"><figcaption>Input B — Joker</figcaption></figure>
-            <figure><img src="assets/part2/2_4_pairs/mask_vertical_batman_joker.png" alt="Mask"><figcaption>Vertical mask (light feather)</figcaption></figure>
-            <figure><img src="assets/part2/2_4_pairs/bj_vertical_blend.png" alt="Blend"><figcaption>Multires blend — seamless transition</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/mask_vertical_batman_joker.png" alt="Mask"><figcaption>Vertical mask</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/bj_vertical_blend.png" alt="Blend"><figcaption>Multires blend</figcaption></figure>
         </div>
     
         <!-- Custom Pair 2: Lamborghinis -->
         <div class="prose">
             <h3>Custom Pair #2 — Lamborghinis (irregular, hand-drawn mask)</h3>
             <p>
-            I hand-painted a jagged mask to keep the <strong>blue car’s</strong> rear half and blend it into the <strong>gold car</strong>.
-            First I show a simple single-scale alpha composite, then the improved multiresolution blend.
+            I hand-painted a jagged mask in photoshop to keep the <strong>gold car’s</strong> rear half and blend it into the <strong>blue car</strong>.
             </p>
         </div>
         <div class="figure-grid">
             <figure><img src="assets/part2/2_4_pairs/blue_lambo.jpg" alt="Blue Lamborghini"><figcaption>Input A — Blue Lamborghini</figcaption></figure>
             <figure><img src="assets/part2/2_4_pairs/gold_lambo.jpg" alt="Gold Lamborghini"><figcaption>Input B — Gold Lamborghini</figcaption></figure>
             <figure><img src="assets/part2/2_4_pairs/lambo_simple_blend_whiteKeepsBLUE.png" alt="Lambo alpha">
-            <figcaption>Single-scale alpha composite (visible haloing)</figcaption></figure>
-            <figure><img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsBLUE.png" alt="Lambo multires blue">
-            <figcaption>Multires blend — white keeps BLUE</figcaption></figure>
-            <figure><img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsGOLD.png" alt="Lambo multires gold">
-            <figcaption>Multires blend — white keeps GOLD</figcaption></figure>
-        </div>
-    
-        <div class="prose notes">
-            <p>
-            <strong>Observation:</strong> For hard, high-contrast edges (like car silhouettes),
-            the multiresolution blend greatly reduces halos and ringing compared to a single-scale alpha composite.
-            The frequency-aware mask smoothing lets sharp details align cleanly at the boundary.
-            </p>
+            <figcaption>Blending the two with the irregular mask</figcaption></figure>
         </div>
         </div>
     </section>
@@ -547,7 +534,7 @@
             <h2>Takeaways</h2>
             <ul>
             <li><b>Filtering is frequency sculpting:</b> Gaussians remove high frequencies; DoG acts as a smoothed edge detector.</li>
-            <li><b>Sharpening is controlled boosting:</b> The unsharp mask enhances highs; too much α exaggerates noise/halos.</li>
+            <li><b>Sharpening is controlled boosting:</b> The unsharp mask enhances highs; too much α exaggerates noise and makes an image too coarse.</li>
             <li><b>Hybrid images:</b> Our perception shifts with distance — up close we see the highs, far away the lows.</li>
             <li><b>Stacks matter:</b> Gaussian & Laplacian stacks enable frequency-aware blending that makes seams disappear.</li>
             </ul>
