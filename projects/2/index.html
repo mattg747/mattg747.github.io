@@ -396,7 +396,7 @@
             <code>I ≈ L<sub>0</sub> + L<sub>1</sub> + … + L<sub>n−1</sub> + G<sub>n</sub></code>.
             </p>
             <p>
-            These stacks are the foundation for <strong>multi-resolution blending</strong> (Part&nbsp;2.4)
+            These stacks are the foundation for <strong>multi-resolution blending</strong> 
             because they let us combine images smoothly at each frequency scale.
             </p>
         </div>
@@ -464,9 +464,8 @@
         <div class="prose notes">
             <p>
             <strong>Observations:</strong> The reconstructions are nearly identical to the originals, with only
-            small differences at the borders (due to padding and floating-point rounding).  
-            This confirms our stack decomposition works correctly — a key step for the multi-resolution blending
-            in Part&nbsp;2.4.
+            small differences due to padding and floating-point rounding.  
+            This confirms our stack decomposition works correctly, a key step for the multi-resolution blending.
             </p>
         </div>
         </div>
@@ -474,69 +473,86 @@
 
     <!-- 2.4 Multiresolution Blending -->
     <section class="section" id="p2-4">
-      <div class="container">
+        <div class="container">
         <div class="prose">
-          <h2>Part 2.4 — Multiresolution Blending (a.k.a. the oraple!)</h2>
-          <p>
-            Using the stacks from Part 2.3, I blend A and B at each frequency band using a <emGaussian-blurred mask</em>.
-            Coarse bands blend broadly; fine bands transition tightly—this removes hard seams.
-          </p>
+            <h2>Part 2.4 — Multiresolution Blending (a.k.a. the “Oraple”)</h2>
+            <p>
+            Using the Gaussian and Laplacian stacks built in <strong>Part&nbsp;2.3</strong>, we can blend two images
+            <em>at each frequency band</em> using a mask that is also progressively blurred.  
+            The idea: 
+            <ul>
+                <li><b>Coarse levels</b> (strongly blurred) blend broadly for smooth global transitions.</li>
+                <li><b>Fine levels</b> (high frequencies) blend tightly to preserve crisp local details.</li>
+            </ul>
+            This avoids the harsh seams that appear if we simply alpha-blend at a single scale.
+            </p>
         </div>
-
+    
         <!-- Oraple -->
-        <div class="prose"><h3>Recreating the “Oraple”</h3></div>
+        <div class="prose"><h3>Recreating the “Oraple” (Orange + Apple)</h3></div>
         <div class="figure-grid">
-          <figure><img src="assets/part2/2_4/oraple_apple.png" alt="Apple"><figcaption>Apple</figcaption></figure>
-          <figure><img src="assets/part2/2_4/oraple_orange.png" alt="Orange"><figcaption>Orange</figcaption></figure>
-          <figure><img src="assets/part2/2_4/mask_vertical.png" alt="Vertical step mask"><figcaption>Vertical step mask</figcaption></figure>
-          <figure><img src="assets/part2/2_4/oraple_vertical.png" alt="Oraple multires blend"><figcaption>Recreated “oraple”</figcaption></figure>
+            <figure><img src="assets/part2/2_4/oraple_apple.png" alt="Apple"><figcaption>Input A — Apple</figcaption></figure>
+            <figure><img src="assets/part2/2_4/oraple_orange.png" alt="Orange"><figcaption>Input B — Orange</figcaption></figure>
+            <figure><img src="assets/part2/2_4/mask_vertical.png" alt="Vertical step mask"><figcaption>Vertical step mask</figcaption></figure>
+            <figure><img src="assets/part2/2_4/oraple_vertical.png" alt="Oraple multires blend"><figcaption>Result — smooth “oraple” blend</figcaption></figure>
         </div>
-
+    
         <!-- Custom Pair 1: Batman/Joker -->
-        <div class="prose"><h3>Custom Pair #1 — Batman ↔ Joker (vertical seam)</h3></div>
-        <div class="figure-grid">
-          <figure><img src="assets/part2/2_4_pairs/bj_batman.png" alt="Batman"><figcaption>Input A — Batman</figcaption></figure>
-          <figure><img src="assets/part2/2_4_pairs/bj_joker.png" alt="Joker"><figcaption>Input B — Joker</figcaption></figure>
-          <figure><img src="assets/part2/2_4_pairs/mask_vertical_batman_joker.png" alt="Mask"><figcaption>Vertical mask (light feather)</figcaption></figure>
-          <figure><img src="assets/part2/2_4_pairs/bj_vertical_blend.png" alt="Blend"><figcaption>Multires blend — centered seam</figcaption></figure>
+        <div class="prose"><h3>Custom Pair #1 — Batman ↔ Joker (soft vertical seam)</h3>
+            <p>
+            Here I aligned Batman and Joker, then used a soft vertical mask.  
+            Each Laplacian level transitions from one character to the other with a gradually blurred mask.
+            </p>
         </div>
-
+        <div class="figure-grid">
+            <figure><img src="assets/part2/2_4_pairs/bj_batman.png" alt="Batman"><figcaption>Input A — Batman</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/bj_joker.png" alt="Joker"><figcaption>Input B — Joker</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/mask_vertical_batman_joker.png" alt="Mask"><figcaption>Vertical mask (light feather)</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/bj_vertical_blend.png" alt="Blend"><figcaption>Multires blend — seamless transition</figcaption></figure>
+        </div>
+    
         <!-- Custom Pair 2: Lamborghinis -->
         <div class="prose">
-          <h3>Custom Pair #2 — Lamborghinis (irregular, hand-drawn mask)</h3>
-          <p>
-            I painted a jagged mask around the blue car’s rear half. Left: simple alpha composite to visualize the mask;
-            right: multiresolution blend that reduces haloing by smoothing the mask per band.
-          </p>
+            <h3>Custom Pair #2 — Lamborghinis (irregular, hand-drawn mask)</h3>
+            <p>
+            I hand-painted a jagged mask to keep the <strong>blue car’s</strong> rear half and blend it into the <strong>gold car</strong>.
+            First I show a simple single-scale alpha composite, then the improved multiresolution blend.
+            </p>
         </div>
-        <div class="figure-grid">  
-            <figure><img src="assets/part2/2_4_pairs/blue_lambo.jpg" alt="Blue lamborghini"><figcaption>Blue lamborghini</figcaption></figure>
-            <figure><img src="assets/part2/2_4_pairs/gold_lambo.jpg" alt="Gold lamborghini"><figcaption>Gold lamborghini</figcaption></figure>
-            <figure><img src="assets/part2/2_4_pairs/lambo_simple_blend_whiteKeepsBLUE.png" alt="Lambo alpha"><figcaption>Blending the two lamborghinis with an irregular mask</figcaption></figure>
+        <div class="figure-grid">
+            <figure><img src="assets/part2/2_4_pairs/blue_lambo.jpg" alt="Blue Lamborghini"><figcaption>Input A — Blue Lamborghini</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/gold_lambo.jpg" alt="Gold Lamborghini"><figcaption>Input B — Gold Lamborghini</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/lambo_simple_blend_whiteKeepsBLUE.png" alt="Lambo alpha">
+            <figcaption>Single-scale alpha composite (visible haloing)</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsBLUE.png" alt="Lambo multires blue">
+            <figcaption>Multires blend — white keeps BLUE</figcaption></figure>
+            <figure><img src="assets/part2/2_4_pairs/lambo_jagged_blend_whiteKeepsGOLD.png" alt="Lambo multires gold">
+            <figcaption>Multires blend — white keeps GOLD</figcaption></figure>
         </div>
-
-        <div class="prose">
-          <p class="notes">
-            For hard-edged, high-contrast boundaries (e.g., car silhouettes), multires blending clearly outperforms a
-            single-scale alpha composite, especially near the transition edge where ringing/halos would otherwise appear.
-          </p>
+    
+        <div class="prose notes">
+            <p>
+            <strong>Observation:</strong> For hard, high-contrast edges (like car silhouettes),
+            the multiresolution blend greatly reduces halos and ringing compared to a single-scale alpha composite.
+            The frequency-aware mask smoothing lets sharp details align cleanly at the boundary.
+            </p>
         </div>
-      </div>
+        </div>
     </section>
-
+    
     <!-- Wrap-up -->
     <section class="section" id="takeaways">
-      <div class="container">
+        <div class="container">
         <div class="prose">
-          <h2>Takeaways</h2>
-          <ul>
-            <li><b>Filtering = frequency sculpting:</b> Gaussian removes highs; DoG detects edges while suppressing noise.</li>
-            <li><b>Sharpening = controlled boost of highs:</b> α controls “crispy vs. crunchy.” Too large amplifies noise/halos.</li>
-            <li><b>Hybrids:</b> perception flips with viewing distance because the visual system attends to different bands.</li>
-            <li><b>Stacks matter:</b> blending at multiple bands lets seams fade naturally from coarse→fine detail.</li>
-          </ul>
+            <h2>Takeaways</h2>
+            <ul>
+            <li><b>Filtering is frequency sculpting:</b> Gaussians remove high frequencies; DoG acts as a smoothed edge detector.</li>
+            <li><b>Sharpening is controlled boosting:</b> The unsharp mask enhances highs; too much α exaggerates noise/halos.</li>
+            <li><b>Hybrid images:</b> Our perception shifts with distance — up close we see the highs, far away the lows.</li>
+            <li><b>Stacks matter:</b> Gaussian & Laplacian stacks enable frequency-aware blending that makes seams disappear.</li>
+            </ul>
         </div>
-      </div>
+        </div>
     </section>
 
   </main>
