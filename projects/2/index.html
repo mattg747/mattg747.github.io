@@ -38,10 +38,6 @@
             <li><b>Concepts:</b> convolution &amp; padding, finite differences, Gaussian smoothing, DoG, unsharp mask,
               frequency analysis (FFT), Gaussian/Laplacian stacks, multi-resolution blending</li>
           </ul>
-          <p class="notes">
-            I emphasize the trade-off between <em>noise suppression</em> and <em>detail preservation</em>, and show how
-            operating at different frequency bands explains both edge quality and why multires blending removes seams.
-          </p>
         </div>
       </div>
     </section>
@@ -60,12 +56,6 @@
             Padding is zero-filled. I validate against <code>scipy.signal.convolve2d</code> and discuss boundary
             handling and runtime.
             </p>
-            <h3>Notes on padding &amp; runtime</h3>
-            <ul>
-            <li><b>Padding:</b> zero padding slightly darkens borders compared to reflect/symmetric. I match SciPy by using the same mode.</li>
-            <li><b>Runtime:</b> the two-loop version is ~10–30× faster than four-loop on ~1 MP images (depends on kernel size).</li>
-            <li><b>Sanity:</b> box filter blurs uniformly; <code>D<sub>x</sub></code>/<code>D<sub>y</sub></code> respond at vertical/horizontal edges and flip sign with contrast.</li>
-            </ul>
         </div>
     
         <!-- ✅ Original selfie image -->
@@ -83,14 +73,16 @@
             <figure><img src="assets/part1/1_1/selfie_box_scipy.png" alt="Selfie box (SciPy)">
             <figcaption>9×9 box — SciPy <code>convolve2d</code></figcaption></figure>
             <figure><img src="assets/part1/1_1/selfie_dx.png" alt="Dx on selfie">
-            <figcaption><code>D<sub>x</sub></code> response (sanity check)</figcaption></figure>
+            <figcaption><code>D<sub>x</sub></code>Convolve Dx</figcaption></figure>
+            <figure><img src="assets/part1/1_1/selfie_dy.png" alt="Dy on selfie">
+            <figcaption><code>D<sub>x</sub></code>Convolve Dx</figcaption></figure>
         </div>
         
         <!-- ✅ Code screenshot -->
         <div class="figure-grid">
             <figure class="span-2">
             <img src="assets/part1/1_1/conv2d_code.png" alt="Screenshot of my conv2d implementation">
-            <figcaption>My custom <code>conv2d</code> implementation (NumPy loops &amp; vectorized version).</figcaption>
+            <figcaption>My custom <code>conv2d</code> implementation.</figcaption>
             </figure>
         </div>
 
@@ -108,10 +100,6 @@
             <code>‖∇I‖ = √(I<sub>x</sub>² + I<sub>y</sub>²)</code>. To binarize edges I sweep a threshold and pick one that
             keeps structural contours (tripod, jacket outline) while suppressing noise.
           </p>
-          <ul>
-            <li><b>Observation:</b> raw finite differences are sensitive to noise—fine textures show up as false edges.</li>
-            <li><b>Choice:</b> I report a threshold near T ≈ 0.20 on [0,1] images, which balanced completeness vs. noise.</li>
-          </ul>
         </div>
 
         <div class="figure-grid">
@@ -154,14 +142,6 @@
           <figure><img src="assets/part1/1_3/cameraman_DoG_Gy_k9_s1.5.png" alt="DoG Gy"><figcaption>DoG Gy response</figcaption></figure>
           <figure><img src="assets/part1/1_3/cameraman_DoG_gradmag_k9_s1.5.png" alt="DoG grad mag"><figcaption>DoG grad magnitude</figcaption></figure>
           <figure><img src="assets/part1/1_3/cameraman_DoG_edges_T0.20.png" alt="DoG edges T=0.20"><figcaption>DoG edges (T = 0.20)</figcaption></figure>
-        </div>
-
-        <div class="prose">
-          <h3>Takeaway</h3>
-          <ul>
-            <li><b>Blur→FD</b> suppresses noise then differentiates — good but still leaks textured noise.</li>
-            <li><b>DoG</b> bakes smoothing into the derivative and gives crisper structural edges with fewer false positives.</li>
-          </ul>
         </div>
       </div>
     </section>
