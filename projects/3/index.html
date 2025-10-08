@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 3: Image Warping & Mosaicing</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Project 3: Image Warping &amp; Mosaicing</h1>
+    <nav><a href="/home.html">← Back to Portfolio</a></nav>
+  </header>
+
+  <main>
+
+    <!-- ===== Overview / Hero ===== -->
+    <section class="section hero" id="overview">
+      <div class="hero-grid">
+        <figure class="hero-figure">
+          <img src="outputs/campanile_mosaic.png"
+               alt="Panoramic mosaic from the Campanile view"
+               loading="eager" decoding="async">
+          <figcaption>Campanile panorama — bilinear warp + alpha feather blend.</figcaption>
+        </figure>
+
+        <div class="prose">
+          <h2>Overview</h2>
+          <p>
+            In this project I implement homography estimation and inverse warping from scratch and
+            use them to rectifiy images and build panoramas. I recover homographies via DLT + least
+            squares, implement nearest-neighbor and bilinear resampling, and blend registered images
+            with feathered alpha masks to form mosaics.
+          </p>
+          <ul>
+            <li><b>Languages/libs:</b> Python, NumPy, Matplotlib, OpenCV (for IO/resize only)</li>
+            <li><b>Core functions:</b> <code>computeH</code>, <code>warpImageNearestNeighbor</code>, <code>warpImageBilinear</code></li>
+            <li><b>Not used:</b> <code>cv2.findHomography</code>, <code>cv2.warpPerspective</code>, <code>skimage.transform.warp</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================
+         A.1 — Datasets
+         ================= -->
+    <section class="section" id="A1">
+      <div class="container">
+        <div class="prose">
+          <h2>A.1 — Image Sets (Fixed COP)</h2>
+          <p>
+            I shot multiple overlapping photos by rotating in place (fixed center of projection).
+            Below are two example sets used throughout the report.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="outputs/campanile_mosaic_123.png" alt="Campanile subset source triptych">
+            <figcaption><b>Campanile (subset):</b> 3 consecutive frames from a larger 6-image sequence.</figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="outputs/mosaic_apartment_d.png" alt="Apartment kitchen pair">
+            <figcaption><b>Apartment:</b> indoor scene with cabinets / oven — good corners for correspondences.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================
+         A.2 — Homographies
+         ======================== -->
+    <section class="section" id="A2">
+      <div class="container">
+        <div class="prose">
+          <h2>A.2 — Recovering Homographies (<code>computeH</code>)</h2>
+          <p>
+            I estimate the 3×3 projective transform <code>p' ~ H p</code> using the Direct Linear
+            Transform (DLT) with >4 point correspondences and solve the overdetermined system via
+            least squares (SVD). I also apply isotropic point normalization to improve conditioning.
+          </p>
+          <p>
+            Correspondences were clicked with Pixspy and saved to CSVs as rows
+            <code>x<sub>i</sub>, y<sub>i</sub>, x'<sub>i</sub>, y'<sub>i</sub></code>.
+          </p>
+        </div>
+
+        <!-- Correspondences visualization + equation system + H -->
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="outputs/campanile_01_02_correspondences.png" alt="Visualized correspondences on pair 01-02">
+            <figcaption>Pair 01→02 correspondences (IDs and epipolar-ish lines drawn for sanity checking).</figcaption>
+          </figure>
+          <figure>
+            <img src="outputs/campanile_01_02_info.txt" alt="System of equations & H" style="background:#111;color:#eee;padding:1rem">
+            <figcaption>Text dump: rows of <em>A h = 0</em> and recovered <em>H</em> (see repo file).</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose notes">
+          <h3>Implementation Notes</h3>
+          <ul>
+            <li><b>DLT rows:</b> each correspondence contributes two rows to <em>A</em> (x,y → x′,y′),
+              solving for 8 dof (scale fixed by <code>H[2,2]=1</code>).</li>
+            <li><b>Normalization:</b> translate to zero mean and scale so mean distance √2; denormalize after SVD.</li>
+            <li><b>Robustness:</b> with &gt;4 points I solve in least squares; outlier rows can be commented in CSV with <code>#</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================
+         A.3 — Warping & Rectify
+         ========================== -->
+    <section class="section" id="A3">
+      <div class="container">
+        <div class="prose">
+          <h2>A.3 — Inverse Warping + Interpolation</h2>
+          <p>
+            I implemented inverse mapping samplers with two interpolants:
+            <b>nearest neighbor</b> (fast, blocky) and <b>bilinear</b> (smoother). I predict the
+            output canvas by transforming the 4 corners through <em>H</em> and use an alpha mask
+            for valid samples.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="outputs/tv_rectified_nn.png" alt="TV rectified NN">
+            <figcaption>Rectification (nearest)</figcaption>
+          </figure>
+          <figure>
+            <img src="outputs/tv_rectified_bilinear.png" alt="TV rectified bilinear">
+            <figcaption>Rectification (bilinear)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="outputs/crows_rectified_nn.png" alt="Crows rectified NN">
+            <figcaption>Rectification 2 (nearest)</figcaption>
+          </figure>
+          <figure>
+            <img src="outputs/crows_rectified_bilinear.png" alt="Crows rectified bilinear">
+            <figcaption>Rectification 2 (bilinear)</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose notes">
+          <h3>Nearest vs Bilinear</h3>
+          <p>
+            Nearest neighbor is very fast but introduces jaggies and aliasing in oblique views.
+            Bilinear is ~2–3× slower but greatly reduces stair-stepping and produces smoother,
+            more faithful rectifications — I use it for the final mosaics.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================
+         A.4 — Mosaics
+         ================= -->
+    <section class="section" id="A4">
+      <div class="container">
+        <div class="prose">
+          <h2>A.4 — Image Mosaics (Blending)</h2>
+          <p>
+            After chaining homographies to a middle “anchor” frame, I warp all images into that
+            reference and blend them by <b>feathered alpha</b> (center-weighted falloff to zero at
+            image borders). This reduces hard seams while keeping detail where overlaps agree.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="outputs/campanile_mosaic.png" alt="Campanile full mosaic">
+            <figcaption><b>Mosaic #1 — Campanile (6 images):</b> bilinear warp + feather blend.</figcaption>
+          </figure>
+
+          <figure class="span-2">
+            <img src="outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic">
+            <figcaption><b>Mosaic #2 — Campanile (view 2):</b> two frames, forward/backward H auto-selection.</figcaption>
+          </figure>
+
+          <figure class="span-2">
+            <img src="outputs/mosaic_apartment_d.png" alt="Apartment mosaic">
+            <figcaption><b>Mosaic #3 — Apartment (indoor):</b> EXIF-aware loading + bilinear warp.</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
+          <h3>Procedure &amp; Notes</h3>
+          <ul>
+            <li><b>Middle anchor:</b> chaining to the center frame keeps outer warps from “blowing up”.</li>
+            <li><b>Alpha feather:</b> per-image weights peak at the center and decay to 0 at edges.</li>
+            <li><b>Debugging aids:</b> bbox prints for each warped frame and reprojection error per pair to catch bad clicks.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wrap-up -->
+    <section class="section" id="takeaways">
+      <div class="container">
+        <div class="prose">
+          <h2>Takeaways</h2>
+          <ul>
+            <li>DLT + normalization gives stable homographies from hand-clicked points.</li>
+            <li>Inverse warping with bilinear interpolation is the sweet spot for quality vs speed.</li>
+            <li>Feathered alpha blending hides seams when registration is good; poor clicks → ghosting.</li>
+            <li>For very wide FOVs, cylindrical warps would further reduce distortions (not required here).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>© <span id="y"></span> Matthew Gerardi — CS180 Project 3</p>
+  </footer>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
