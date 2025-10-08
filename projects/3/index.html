@@ -18,7 +18,7 @@
     <section class="section hero" id="overview">
       <div class="hero-grid">
         <figure class="hero-figure">
-          <img src="outputs/campanile_mosaic.png"
+          <img src="assets/part1/outputs/FIXED_campanile_03_04_correspondences.png"
                alt="Panoramic mosaic from the Campanile view"
                loading="eager" decoding="async">
           <figcaption>Campanile panorama — bilinear warp + alpha feather blend.</figcaption>
@@ -56,11 +56,11 @@
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="outputs/campanile_mosaic_123.png" alt="Campanile subset source triptych">
+            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Campanile subset source triptych">
             <figcaption><b>Campanile (subset):</b> 3 consecutive frames from a larger 6-image sequence.</figcaption>
           </figure>
           <figure class="span-2">
-            <img src="outputs/mosaic_apartment_d.png" alt="Apartment kitchen pair">
+            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment kitchen pair">
             <figcaption><b>Apartment:</b> indoor scene with cabinets / oven — good corners for correspondences.</figcaption>
           </figure>
         </div>
@@ -88,11 +88,11 @@
         <!-- Correspondences visualization + equation system + H -->
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="outputs/campanile_01_02_correspondences.png" alt="Visualized correspondences on pair 01-02">
+            <img src="assets/part1/outputs/campanile_01_02_correspondences.png" alt="Visualized correspondences on pair 01-02">
             <figcaption>Pair 01→02 correspondences (IDs and epipolar-ish lines drawn for sanity checking).</figcaption>
           </figure>
           <figure>
-            <img src="outputs/campanile_01_02_info.txt" alt="System of equations & H" style="background:#111;color:#eee;padding:1rem">
+            <img src="assets/part1/outputs/campanile_01_02_info.txt" alt="System of equations & H" style="background:#111;color:#eee;padding:1rem">
             <figcaption>Text dump: rows of <em>A h = 0</em> and recovered <em>H</em> (see repo file).</figcaption>
           </figure>
         </div>
@@ -126,20 +126,20 @@
 
         <div class="figure-grid">
           <figure>
-            <img src="outputs/tv_rectified_nn.png" alt="TV rectified NN">
+            <img src="assets/part1/outputs/tv_rectified_nn.png" alt="TV rectified NN">
             <figcaption>Rectification (nearest)</figcaption>
           </figure>
           <figure>
-            <img src="outputs/tv_rectified_bilinear.png" alt="TV rectified bilinear">
+            <img src="assets/part1/outputs/tv_rectified_bilinear.png" alt="TV rectified bilinear">
             <figcaption>Rectification (bilinear)</figcaption>
           </figure>
 
           <figure>
-            <img src="outputs/crows_rectified_nn.png" alt="Crows rectified NN">
+            <img src="assets/part1/outputs/crows_rectified_nn.png" alt="Crows rectified NN">
             <figcaption>Rectification 2 (nearest)</figcaption>
           </figure>
           <figure>
-            <img src="outputs/crows_rectified_bilinear.png" alt="Crows rectified bilinear">
+            <img src="assets/part1/outputs/crows_rectified_bilinear.png" alt="Crows rectified bilinear">
             <figcaption>Rectification 2 (bilinear)</figcaption>
           </figure>
         </div>
@@ -171,17 +171,17 @@
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="outputs/campanile_mosaic.png" alt="Campanile full mosaic">
+            <img src="assets/part1/outputs/campanile_mosaic.png" alt="Campanile full mosaic">
             <figcaption><b>Mosaic #1 — Campanile (6 images):</b> bilinear warp + feather blend.</figcaption>
           </figure>
 
           <figure class="span-2">
-            <img src="outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic">
+            <img src="assets/part1/outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic">
             <figcaption><b>Mosaic #2 — Campanile (view 2):</b> two frames, forward/backward H auto-selection.</figcaption>
           </figure>
 
           <figure class="span-2">
-            <img src="outputs/mosaic_apartment_d.png" alt="Apartment mosaic">
+            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment mosaic">
             <figcaption><b>Mosaic #3 — Apartment (indoor):</b> EXIF-aware loading + bilinear warp.</figcaption>
           </figure>
         </div>
