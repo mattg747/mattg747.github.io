@@ -21,16 +21,16 @@
           <img src="assets/part1/outputs/FIXED_campanile_03_04_correspondences.png"
                alt="Panoramic mosaic from the Campanile view"
                loading="eager" decoding="async">
-          <figcaption>Campanile panorama — bilinear warp + alpha feather blend.</figcaption>
+          <figcaption>Campanile panorama: the correspondences between two images that allow for us to calculate the homography matrix relating the two and making stitching possible</figcaption>
         </figure>
 
         <div class="prose">
           <h2>Overview</h2>
           <p>
             In this project I implement homography estimation and inverse warping from scratch and
-            use them to rectifiy images and build panoramas. I recover homographies via DLT + least
+            use them to rectifiy images and build panoramas. I recover homographies via least
             squares, implement nearest-neighbor and bilinear resampling, and blend registered images
-            with feathered alpha masks to form mosaics.
+            with alpha masks to form mosaics.
           </p>
           <ul>
             <li><b>Languages/libs:</b> Python, NumPy, Matplotlib, OpenCV (for IO/resize only)</li>
@@ -49,19 +49,28 @@
         <div class="prose">
           <h2>A.1 — Image Sets (Fixed COP)</h2>
           <p>
-            I shot multiple overlapping photos by rotating in place (fixed center of projection).
-            Below are two example sets used throughout the report.
+            All sequences were captured from a <b>fixed center of projection</b> — I stood in one place and
+            <b>rotated the camera slightly</b> between shots. This makes the transform between images a
+            <em>projective homography</em>, which is exactly what we estimate in A.2.
           </p>
         </div>
 
         <div class="figure-grid">
-          <figure class="span-2">
-            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Campanile subset source triptych">
-            <figcaption><b>Campanile (subset):</b> 3 consecutive frames from a larger 6-image sequence.</figcaption>
+          <figure>
+            <img src="assets/part1/sources/hdr_campanile/DF9A0199-HDR.jpg" alt="Campanile frame 01">
+            <figcaption>HDR Campanile — frame 01</figcaption>
           </figure>
-          <figure class="span-2">
-            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment kitchen pair">
-            <figcaption><b>Apartment:</b> indoor scene with cabinets / oven — good corners for correspondences.</figcaption>
+          <figure>
+            <img src="assets/part1/sources/hdr_campanile/DF9A0202-HDR.jpg" alt="Campanile frame 02">
+            <figcaption>HDR Campanile — frame 02</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/sources/apartment/IMG_8634.jpg" alt="Apartment frame 01">
+            <figcaption>Apartment — frame 01</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/sources/apartment/IMG_8635.jpg" alt="Apartment frame 02">
+            <figcaption>Apartment — frame 02</figcaption>
           </figure>
         </div>
       </div>
@@ -75,36 +84,58 @@
         <div class="prose">
           <h2>A.2 — Recovering Homographies (<code>computeH</code>)</h2>
           <p>
-            I estimate the 3×3 projective transform <code>p' ~ H p</code> using the Direct Linear
-            Transform (DLT) with >4 point correspondences and solve the overdetermined system via
-            least squares (SVD). I also apply isotropic point normalization to improve conditioning.
-          </p>
-          <p>
-            Correspondences were clicked with Pixspy and saved to CSVs as rows
-            <code>x<sub>i</sub>, y<sub>i</sub>, x'<sub>i</sub>, y'<sub>i</sub></code>.
+            I estimate the 3×3 projective transform <code>p′ ≃ H p</code> from hand-clicked
+            correspondences using a linear least-squares solve. Each match adds two equations and with
+            &gt;4 matches the system is overdetermined; I solve via SVD. Points were clicked in Pixspy and saved to CSVs as
+            rows <code>x, y, x′, y′</code>.
           </p>
         </div>
 
-        <!-- Correspondences visualization + equation system + H -->
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/campanile_01_02_correspondences.png" alt="Visualized correspondences on pair 01-02">
-            <figcaption>Pair 01→02 correspondences (IDs and epipolar-ish lines drawn for sanity checking).</figcaption>
+            <img src="assets/part1/outputs/campanile_01_02_correspondences.png" alt="Campanile 01→02 correspondences">
+            <figcaption>Campanile 01→02 — correspondences overlay for sanity-checking.</figcaption>
           </figure>
-          <figure>
-            <img src="assets/part1/outputs/campanile_01_02_info.txt" alt="System of equations & H" style="background:#111;color:#eee;padding:1rem">
-            <figcaption>Text dump: rows of <em>A h = 0</em> and recovered <em>H</em> (see repo file).</figcaption>
+          <figure class="span-2">
+            <img src="assets/part1/outputs/apartment_correspondences.png" alt="Apartment 01→02 correspondences">
+            <figcaption>Apartment 01→02 — correspondences overlay.</figcaption>
           </figure>
         </div>
 
-        <div class="prose notes">
-          <h3>Implementation Notes</h3>
-          <ul>
-            <li><b>DLT rows:</b> each correspondence contributes two rows to <em>A</em> (x,y → x′,y′),
-              solving for 8 dof (scale fixed by <code>H[2,2]=1</code>).</li>
-            <li><b>Normalization:</b> translate to zero mean and scale so mean distance √2; denormalize after SVD.</li>
-            <li><b>Robustness:</b> with &gt;4 points I solve in least squares; outlier rows can be commented in CSV with <code>#</code>.</li>
-          </ul>
+        <div class="prose">
+          <h3>System of Equations &amp; Result</h3>
+          <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
+Loaded 8 correspondences from correspondences/hdr_campanile/points_01_02.csv
+
+=== Correspondence visualization saved to ===
+ outputs/campanile_01_02_correspondences.png
+
+=== First few rows of A (2N×9) ===
+[[   -2167.    -4541.       -1.        0.        0.        0.  1805111.
+   3782653.      833.]
+ [       0.        0.        0.    -2167.    -4541.       -1.  9961699.
+  20874977.     4597.]
+ [   -3011.    -4442.       -1.        0.        0.        0.  5025359.
+   7413698.     1669.]
+ [       0.        0.        0.    -3011.    -4442.       -1. 13293565.
+  19611430.     4415.]
+ [   -3215.    -5198.       -1.        0.        0.        0.  5954180.
+   9626696.     1852.]
+ [       0.        0.        0.    -3215.    -5198.       -1. 16441510.
+  26582572.     5114.]
+ [   -3175.    -4191.       -1.        0.        0.        0.  5788025.
+   7640193.     1823.]
+ [       0.        0.        0.    -3175.    -4191.       -1.  13204825.
+  17430369.     4159.]]
+
+=== Homography H (p2 ~ H p1) ===
+ [[    1.290306    -0.006082 -1782.799716]
+ [    0.230369     1.213563  -594.572715]
+ [    0.000078     0.000002     1.      ]]
+
+Reprojection errors (px): [3.845 1.599 3.218 1.264 1.469 1.407 2.674 2.352]
+Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
+          </pre>
         </div>
       </div>
     </section>
@@ -122,6 +153,17 @@
             output canvas by transforming the 4 corners through <em>H</em> and use an alpha mask
             for valid samples.
           </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part1/sources/rectify/angled_tv.jpg" alt="Original angled TV photo">
+            <figcaption>Original (angled TV)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/sources/rectify/angled_painting.jpg" alt="Original angled painting">
+            <figcaption>Original (angled painting)</figcaption>
+          </figure>
         </div>
 
         <div class="figure-grid">
@@ -147,9 +189,9 @@
         <div class="prose notes">
           <h3>Nearest vs Bilinear</h3>
           <p>
-            Nearest neighbor is very fast but introduces jaggies and aliasing in oblique views.
-            Bilinear is ~2–3× slower but greatly reduces stair-stepping and produces smoother,
-            more faithful rectifications — I use it for the final mosaics.
+            <b>Nearest neighbor:</b> each output pixel samples the <em>closest</em> input pixel (fast, but blocky and jagged on slants).<br>
+            <b>Bilinear:</b> takes a weighted average of the four nearest input pixels, producing smooth, anti-aliased results (slower but visibly better).<br>
+            In both cases I use <em>inverse warping</em>: for every output location, map back through <code>H⁻¹</code> to sample the source; this avoids holes.
           </p>
         </div>
       </div>
@@ -171,8 +213,8 @@
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/campanile_mosaic.png" alt="Campanile full mosaic">
-            <figcaption><b>Mosaic #1 — Campanile (6 images):</b> bilinear warp + feather blend.</figcaption>
+            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Campanile full mosaic">
+            <figcaption><b>Mosaic #1 — Campanile (3 images):</b> bilinear warp + feather blend.</figcaption>
           </figure>
 
           <figure class="span-2">
@@ -189,10 +231,54 @@
         <div class="prose">
           <h3>Procedure &amp; Notes</h3>
           <ul>
-            <li><b>Middle anchor:</b> chaining to the center frame keeps outer warps from “blowing up”.</li>
-            <li><b>Alpha feather:</b> per-image weights peak at the center and decay to 0 at edges.</li>
-            <li><b>Debugging aids:</b> bbox prints for each warped frame and reprojection error per pair to catch bad clicks.</li>
+            <li><b>1) Pick a middle photo</b> to keep steady. I compute a transform from each other photo into this “anchor.”</li>
+            <li><b>2) Warp every photo</b> onto one big canvas using the transforms (homographies) I estimated from point matches.</li>
+            <li><b>3) Blend overlaps</b> with soft weights that are strongest near the center of each photo and fade to zero at the edges. Where photos overlap, the pixels are just a weighted average — this hides a hard seam.</li>
+            <li>If a seam still shows, it’s usually because the inputs disagree (moving people, lighting change, or bad clicks). More points or re-clicking fixes it.</li>
           </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="issues">
+      <div class="container">
+        <div class="prose">
+          <h2>Debugging &amp; Issues</h2>
+          <p>Two problems came up while building the mosaics and how I addressed them:</p>
+        </div>
+
+        <div class="prose">
+          <h3>1) A bad correspondence breaks a pair</h3>
+          <p>
+            One clicked point for Campanile 03→04 was wrong. The pair overlay looked suspicious and the
+            mosaic ghosted badly. Re-clicking or commenting out the bad row fixed it.
+          </p>
+        </div>
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part1/outputs/BUGGY_campanile_03_04_correspondences.png" alt="Buggy 03-04 correspondences">
+            <figcaption>Buggy pair — wrong point match is obvious when drawn.</figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part1/outputs/BUGGY_campanile_mosaic_1234.png" alt="Buggy mosaic 1-4">
+            <figcaption>Resulting mosaic with a single bad correspondence — heavy ghosting.</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
+          <h3>2) Very wide field of view (near 180°)</h3>
+          <p>
+            Planar homographies stretch perspective strongly at the ends of a very wide panorama. Even with
+            good alignment, straight lines can bend and edges look “pulled”. A cylindrical projection maps
+            rotations to near-horizontal shifts and usually looks much better for super-wide pans (not required for
+            this assignment, but that’s why some tools switch projections automatically).
+          </p>
+        </div>
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part1/outputs/bilinear_campanile_mosaic.png" alt="Very wide mosaic showing distortion">
+            <figcaption>Large-FOV panorama — good registration but perspective stretching near the sides.</figcaption>
+          </figure>
         </div>
       </div>
     </section>
