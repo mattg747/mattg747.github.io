@@ -244,6 +244,17 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
             When stacking images, you do a weighted average at each pixel using these alphas. This reduces hard seams while keeping detail where overlaps agree.
           </p>
         </div>
+        <div class="prose">
+          <h3>Implementation</h3>
+          <ol>
+            <li><b>Geometric Alignment:</b> For each adjacent pair, compute a homography <code>H</code> from hand‑clicked correspondences using <code>computeH</code> (least squares). Chain homographies into a common <em>anchor</em> frame (left-most or middle image) in <code>scripts/make_mosaic.py</code>.</li>
+            <li><b>Canvas Setup:</b> Predict the global mosaic bounds by transforming each image’s four corners through its <code>H</code> (<code>_forward_bounds</code>). This gives the output canvas size and each image’s offset.</li>
+            <li><b>Weight Map (Feathered Alpha):</b> Build an alpha mask per warped image that is strongest near the center and falls smoothly toward 0 at the borders (center‑weighted falloff). This de‑emphasizes edges and reduces hard seams.</li>
+            <li><b>Multi‑Resolution Decomposition:</b> Construct a lightweight 2‑level Laplacian pyramid for each warped image (low‑pass + band‑pass). This separates coarse illumination and fine detail.</li>
+            <li><b>Pyramid Blending:</b> At each level, blend corresponding bands using the alpha weights (and a blurred version of the weights for the coarse level) to get smooth transitions.</li>
+            <li><b>Reconstruction:</b> Recompose the final mosaic by summing the blended band(s) and adding back the coarsest level. In practice this eliminates visible seams while preserving detail where overlaps agree.</li>
+          </ol>
+        </div>
 
         <div class="figure-grid">
           <figure class="span-2">
@@ -263,11 +274,11 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
         </div>
 
         <div class="prose">
-          <h3>Procedure &amp; Notes</h3>
+          <h3>Notes</h3>
           <ul>
-            <li><b>1) For panoramas with only a few source images, its safe to use the left most image as the "anchor." Then, I compute a transform from each other photo into the anchor.</li>
-            <li><b>2) Warp every photo</b> onto one big canvas using the transforms (homographies) I estimated from point matches.</li>
-            <li><b>3) Blend overlaps</b> with soft weights that are strongest near the center of each photo and fade to zero at the edges. Where photos overlap, the pixels are just a weighted average — this hides a hard seam.</li>
+            <li><b>For panoramas with only a few source images, its safe to use the left most image as the "anchor." Then, I compute a transform from each other photo into the anchor.</li>
+            <li><b>Warp every photo</b> onto one big canvas using the transforms (homographies) I estimated from point matches.</li>
+            <li><b>Blend overlaps</b> with soft weights that are strongest near the center of each photo and fade to zero at the edges. Where photos overlap, the pixels are just a weighted average — this hides a hard seam.</li>
             <li>If a seam still shows, it’s usually because the inputs disagree (moving people, lighting change, or bad clicks). More points or re-clicking fixes it.</li>
           </ul>
         </div>
