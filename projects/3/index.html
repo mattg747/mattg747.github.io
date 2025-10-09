@@ -84,9 +84,10 @@
         <div class="prose">
           <h2>A.2 — Recovering Homographies (<code>computeH</code>)</h2>
           <p>
-            I estimate the 3×3 projective transform <code>p′ ≃ H p</code> from hand-clicked
-            correspondences using a linear least-squares solve. Each match adds two equations and with
-            &gt;4 matches the system is overdetermined; I solve via SVD. Points were clicked in Pixspy and saved to CSVs as
+            I estimate the 3×3 projective transform <code>p′ ≃ H p</code> from hand‑clicked
+            correspondences using a linear <b>least‑squares</b> solve. Each match contributes two
+            equations; with &gt;4 matches the system is overdetermined and I solve for the 8 unknowns
+            (fixing <code>h₃₃=1</code>) via SVD/LS. Points were clicked in Pixspy and saved to CSVs as
             rows <code>x, y, x′, y′</code>.
           </p>
         </div>
@@ -100,29 +101,29 @@
 x′ = (h₁₁x + h₁₂y + h₁₃) / (h₃₁x + h₃₂y + h₃₃)
 y′ = (h₂₁x + h₂₂y + h₂₃) / (h₃₁x + h₃₂y + h₃₃)
             </pre>
-            <p>
-              Rearranging gives two linear equations per correspondence:
-            </p>
             <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
-[-x  -y  -1   0   0   0   x·x′  y·x′  x′]
-[ 0   0   0  -x  -y  -1   x·y′  y·y′  y′]
+Let <b>h</b> = [h₁₁ h₁₂ h₁₃ h₂₁ h₂₂ h₂₃ h₃₁ h₃₂]ᵀ and fix h₃₃=1.
+For each (x,y) → (x′,y′), we write two rows of <b>A h = b</b>:
+
+Row x′: [ x  y  1   0  0  0  -x·x′  -y·x′ ]  · h =  x′
+Row y′: [ 0  0  0   x  y  1  -x·y′  -y·y′ ]  · h =  y′
             </pre>
             <p>
-              Stacking all 2N equations yields the matrix <code>A</code> (size 2N×9), and we solve
-              <code>A·h = 0</code> for <code>h</code> using SVD (smallest singular vector).
-              The 9-vector <code>h</code> reshapes into the 3×3 homography matrix <code>H</code>.
+              Stacking all pairs yields a 2N×8 matrix <code>A</code> and a 2N-vector <code>b</code>.
+              I solve the least‑squares problem <code>h = argmin‖A h − b‖₂</code> (via SVD), then reshape
+              into <code>H</code> with <code>h₃₃=1</code>.
             </p>
           </div>
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/campanile_01_02_correspondences.png" alt="Campanile 01→02 correspondences">
+            <img src="assets/part1/outputs/campanile_01_02_correspondences.png" alt="Campanile 01→02 correspondences" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption>Campanile 01→02 — correspondences overlay for sanity-checking.</figcaption>
           </figure>
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/apartment_correspondences.png" alt="Apartment 01→02 correspondences">
+            <img src="assets/part1/outputs/apartment_correspondences.png" alt="Apartment 01→02 correspondences" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption>Apartment 01→02 — correspondences overlay.</figcaption>
           </figure>
         </div>
@@ -182,13 +183,13 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/sources/rectify/angled_tv.jpg" alt="Original angled TV photo">
+            <img src="assets/part1/sources/rectify/angled_tv.jpg" alt="Original angled TV photo" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption>Original (angled TV)</figcaption>
           </figure>
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/sources/rectify/angled_painting.jpg" alt="Original angled painting">
+            <img src="assets/part1/sources/rectify/angled_painting.jpg" alt="Original angled painting" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption>Original (angled painting)</figcaption>
           </figure>
         </div>
@@ -240,17 +241,17 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Campanile full mosaic">
+            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Campanile full mosaic" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption><b>Mosaic #1 — Campanile (3 images):</b> bilinear warp + feather blend.</figcaption>
           </figure>
 
           <figure class="span-2">
-            <img src="assets/part1/outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic">
+            <img src="assets/part1/outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption><b>Mosaic #2 — Campanile (view 2):</b> two frames, forward/backward H auto-selection.</figcaption>
           </figure>
 
           <figure class="span-2">
-            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment mosaic">
+            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment mosaic" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption><b>Mosaic #3 — Apartment (indoor):</b> EXIF-aware loading + bilinear warp.</figcaption>
           </figure>
         </div>
@@ -283,13 +284,13 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/BUGGY_campanile_03_04_correspondences.png" alt="Buggy 03-04 correspondences">
+            <img src="assets/part1/outputs/BUGGY_campanile_03_04_correspondences.png" alt="Buggy 03-04 correspondences" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption>Buggy pair — wrong point match is obvious when drawn.</figcaption>
           </figure>
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/BUGGY_campanile_mosaic_1234.png" alt="Buggy mosaic 1-4">
+            <img src="assets/part1/outputs/BUGGY_campanile_mosaic_1234.png" alt="Buggy mosaic 1-4" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
             <figcaption>Resulting mosaic with a single bad correspondence — heavy ghosting.</figcaption>
           </figure>
         </div>
@@ -305,7 +306,7 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/bilinear_campanile_mosaic.png" alt="Very wide mosaic showing distortion" style="width:100%;height:auto;">
+            <img src="assets/part1/outputs/bilinear_campanile_mosaic.png" alt="Very wide mosaic showing distortion" style="width:100%;height:auto;max-width:1100px;display:block;margin:0 auto;">
             <figcaption>Large-FOV panorama — good registration but perspective stretching near the sides.</figcaption>
           </figure>
         </div>
