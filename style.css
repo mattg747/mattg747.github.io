@@ -188,7 +188,22 @@ footer{
   display:grid;
   grid-template-columns:1fr;
   gap:1rem;
+  justify-items:stretch;
 }
+/* Grid span & media utilities */
+.span-2{ grid-column:1 / -1; }              /* let a figure span the full grid width */
+.center{ margin-left:auto; margin-right:auto; }
+
+/* Make individual images fill the content width and be centered */
+.wide-center{
+  display:block;
+  width:100%;
+  max-width:var(--section-width);
+  margin:0 auto;
+}
+
+/* Remove the global max-height cap when needed (e.g., large landscape plates) */
+.no-cap{ max-height:none !important; }
 @media (min-width:700px){
   .figure-grid{ grid-template-columns:repeat(2,1fr); }
 }
@@ -305,3 +320,58 @@ figcaption{
   border-top:1px solid var(--panel-border);
 }
 .hero .prose{ max-width:66ch; }
+
+/* ===== Project 3 layout overrides (wider content & centered media) ===== */
+:root{
+  /* Increase page content width so big landscape plates have room */
+  --section-width: 1200px;
+}
+
+/* Center the main content column and use the wider width */
+.section .container{
+  max-width: var(--section-width);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Figure grid: 2 columns on wide screens, 1 column on small */
+.figure-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 1.25rem;
+  justify-items: stretch;     /* make children fill their grid cell */
+}
+
+/* Make full-width figures actually span the full grid */
+.span-2{
+  grid-column: 1 / -1;
+}
+
+/* Normalize figures/images to fill available width and center nicely */
+.figure-grid figure{ margin: 0; }
+.figure-grid figure img{
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Utilities you can use anywhere if needed */
+.wide-center{
+  display: block;
+  width: 100%;
+  max-width: var(--section-width);
+  margin: 0 auto;
+}
+.no-cap{ max-height: none !important; } /* remove any sitewide img height caps */
+.center{ margin-left: auto; margin-right: auto; }
+
+/* Collapse to single column on smaller screens */
+@media (max-width: 900px){
+  .figure-grid{
+    grid-template-columns: 1fr;
+  }
+}
+/* Make full-width (span-2) figures ignore the global image height cap */
+.figure-grid .span-2 img{
+  max-height: none !important;
+}
