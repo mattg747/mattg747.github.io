@@ -117,19 +117,24 @@ Row y′: [ 0  0  0   x  y  1  -x·y′  -y·y′ ]  · h =  y′
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/campanile_01_02_correspondences.png" alt="Campanile 01→02 correspondences" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/campanile_01_02_correspondences.png" alt="Campanile 01→02 correspondences">
             <figcaption>Campanile 01→02 — correspondences overlay for sanity-checking.</figcaption>
           </figure>
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/apartment_correspondences.png" alt="Apartment 01→02 correspondences" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/apartment_correspondences.png" alt="Apartment 01→02 correspondences">
             <figcaption>Apartment 01→02 — correspondences overlay.</figcaption>
           </figure>
         </div>
 
         <div class="prose">
           <h3>System of Equations &amp; Result</h3>
+          <p class="notes">
+            <strong>Note:</strong> The matrix dump below is from an earlier DLT-style <code>2N×9</code> debug run. 
+            My final implementation uses the least‑squares form <code>A h = b</code> with <code>h₃₃=1</code>, 
+            so <code>A</code> is <code>2N×8</code> and <code>b</code> is length <code>2N</code>.
+          </p>
           <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
 Loaded 8 correspondences from correspondences/hdr_campanile/points_01_02.csv
 
@@ -183,13 +188,13 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/sources/rectify/angled_tv.jpg" alt="Original angled TV photo" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/sources/rectify/angled_tv.jpg" alt="Original angled TV photo">
             <figcaption>Original (angled TV)</figcaption>
           </figure>
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/sources/rectify/angled_painting.jpg" alt="Original angled painting" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/sources/rectify/angled_painting.jpg" alt="Original angled painting">
             <figcaption>Original (angled painting)</figcaption>
           </figure>
         </div>
@@ -241,17 +246,17 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Campanile full mosaic" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Campanile full mosaic">
             <figcaption><b>Mosaic #1 — Campanile (3 images):</b> bilinear warp + feather blend.</figcaption>
           </figure>
 
           <figure class="span-2">
-            <img src="assets/part1/outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic">
             <figcaption><b>Mosaic #2 — Campanile (view 2):</b> two frames, forward/backward H auto-selection.</figcaption>
           </figure>
 
           <figure class="span-2">
-            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment mosaic" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment mosaic">
             <figcaption><b>Mosaic #3 — Apartment (indoor):</b> EXIF-aware loading + bilinear warp.</figcaption>
           </figure>
         </div>
@@ -284,13 +289,13 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/BUGGY_campanile_03_04_correspondences.png" alt="Buggy 03-04 correspondences" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/BUGGY_campanile_03_04_correspondences.png" alt="Buggy 03-04 correspondences">
             <figcaption>Buggy pair — wrong point match is obvious when drawn.</figcaption>
           </figure>
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/BUGGY_campanile_mosaic_1234.png" alt="Buggy mosaic 1-4" style="width:100%;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/BUGGY_campanile_mosaic_1234.png" alt="Buggy mosaic 1-4">
             <figcaption>Resulting mosaic with a single bad correspondence — heavy ghosting.</figcaption>
           </figure>
         </div>
@@ -306,7 +311,7 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
         </div>
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/outputs/bilinear_campanile_mosaic.png" alt="Very wide mosaic showing distortion" style="width:100%;height:auto;max-width:1100px;display:block;margin:0 auto;">
+            <img src="assets/part1/outputs/bilinear_campanile_mosaic.png" alt="Very wide mosaic showing distortion">
             <figcaption>Large-FOV panorama — good registration but perspective stretching near the sides.</figcaption>
           </figure>
         </div>

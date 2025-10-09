@@ -215,6 +215,19 @@ figure{
   overflow:hidden;
 }
 
+/* Ensure figures lay out content vertically and center images */
+.figure-grid figure{
+  display:flex;
+  flex-direction:column;
+  align-items:center;   /* center children horizontally */
+}
+.figure-grid figure > img{
+  margin:0 auto;        /* center the image block */
+  width:100%;           /* let the image fill the figure width */
+  max-width:100%;       /* no extra cap here */
+}
+
+/* Global image bounds */
 /* Global image bounds */
 .prose img,
 .figure-grid img,
@@ -225,6 +238,12 @@ figure img{
   height:auto;
   max-width:100%;
   max-height:var(--img-max-h-mobile);
+  object-fit:contain;
+}
+
+/* For full-width figure plates, avoid height caps that can make images look "small" */
+.figure-grid .span-2 > img{
+  max-height:none !important;
   object-fit:contain;
 }
 @media (min-width:800px){
