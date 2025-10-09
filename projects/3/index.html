@@ -27,7 +27,7 @@
         <div class="prose">
           <h2>Overview</h2>
           <p>
-            In this project I implement homography estimation and inverse warping from scratch and
+            In this project, I implement homography estimation and inverse warping from scratch and
             use them to rectifiy images and build panoramas. I recover homographies via least
             squares, implement nearest-neighbor and bilinear resampling, and blend registered images
             with alpha masks to form mosaics.
@@ -58,11 +58,11 @@
         <div class="figure-grid">
           <figure>
             <img src="assets/part1/sources/hdr_campanile/DF9A0199-HDR.jpg" alt="Campanile frame 01">
-            <figcaption>HDR Campanile — frame 01</figcaption>
+            <figcaption>HDR Campanile View — frame 01</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/sources/hdr_campanile/DF9A0202-HDR.jpg" alt="Campanile frame 02">
-            <figcaption>HDR Campanile — frame 02</figcaption>
+            <figcaption>HDR Campanile View — frame 02</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/sources/apartment/IMG_8634.jpg" alt="Apartment frame 01">
@@ -84,7 +84,7 @@
         <div class="prose">
           <h2>A.2 — Recovering Homographies (<code>computeH</code>)</h2>
           <p>
-            I estimate the 3×3 projective transform <code>p′ ≃ H p</code> from hand‑clicked
+            I estimate the 3×3 projective transform <code>p′ ≃ H p</code> from hand‑clicked 
             correspondences using a linear <b>least‑squares</b> solve. Each match contributes two
             equations; with &gt;4 matches the system is overdetermined and I solve for the 8 unknowns
             (fixing <code>h₃₃=1</code>) via SVD/LS. Points were clicked in Pixspy and saved to CSVs as
@@ -238,9 +238,10 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
         <div class="prose">
           <h2>A.4 — Image Mosaics (Blending)</h2>
           <p>
-            After chaining homographies to a middle “anchor” frame, I warp all images into that
-            reference and blend them by <b>feathered alpha</b> (center-weighted falloff to zero at
-            image borders). This reduces hard seams while keeping detail where overlaps agree.
+            After chaining homographies from left to right, I warp all images into that
+            reference and blend them by <b>feathered alpha</b>. For each warped image, you make an alpha mask (same width/height as the image) with values in [0, 1].
+            The mask is highest (≈1) near the center of the image and falls off to 0 at the borders (so edges contribute less).
+            When stacking images, you do a weighted average at each pixel using these alphas. This reduces hard seams while keeping detail where overlaps agree.
           </p>
         </div>
 
@@ -252,19 +253,19 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
 
           <figure class="span-2">
             <img src="assets/part1/outputs/mosaic_campanile_view2.png" alt="Campanile view 2 mosaic">
-            <figcaption><b>Mosaic #2 — Campanile (view 2):</b> two frames, forward/backward H auto-selection.</figcaption>
+            <figcaption><b>Mosaic #2 — Campanile (view 2):</b> two frames</figcaption>
           </figure>
 
           <figure class="span-2">
             <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Apartment mosaic">
-            <figcaption><b>Mosaic #3 — Apartment (indoor):</b> EXIF-aware loading + bilinear warp.</figcaption>
+            <figcaption><b>Mosaic #3 — Apartment (indoor):</b> bilinear warp.</figcaption>
           </figure>
         </div>
 
         <div class="prose">
           <h3>Procedure &amp; Notes</h3>
           <ul>
-            <li><b>1) Pick a middle photo</b> to keep steady. I compute a transform from each other photo into this “anchor.”</li>
+            <li><b>1) For panoramas with only a few source images, its safe to use the left most image as the "anchor." Then, I compute a transform from each other photo into the anchor.</li>
             <li><b>2) Warp every photo</b> onto one big canvas using the transforms (homographies) I estimated from point matches.</li>
             <li><b>3) Blend overlaps</b> with soft weights that are strongest near the center of each photo and fade to zero at the edges. Where photos overlap, the pixels are just a weighted average — this hides a hard seam.</li>
             <li>If a seam still shows, it’s usually because the inputs disagree (moving people, lighting change, or bad clicks). More points or re-clicking fixes it.</li>
@@ -305,8 +306,8 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
           <p>
             Planar homographies stretch perspective strongly at the ends of a very wide panorama. Even with
             good alignment, straight lines can bend and edges look “pulled”. A cylindrical projection maps
-            rotations to near-horizontal shifts and usually looks much better for super-wide pans (not required for
-            this assignment, but that’s why some tools switch projections automatically).
+            rotations to near-horizontal shifts and usually looks much better for super-wide pans (I didn't get the chance to implement it for
+            this assignment, but that would be the logical next step for a better wide FOV panorama like seen below).
           </p>
         </div>
         <div class="figure-grid">
@@ -324,10 +325,11 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
         <div class="prose">
           <h2>Takeaways</h2>
           <ul>
-            <li>DLT + normalization gives stable homographies from hand-clicked points.</li>
+            <li>A single 3×3 matrix can map any point on a planar surface (or a scene captured by rotating in place) from one image to another. That’s why rotating the camera around a fixed center of projection makes panoramas doable with just homographies.</li>
+            <li>We need to solve for 8 variables/DOF in the homography matrix. Each correspondence gives two linear constraints. Four points solve it in theory, but 8–12 well-spread points make the least-squares fit stable and less sensitive to noise.</li>
             <li>Inverse warping with bilinear interpolation is the sweet spot for quality vs speed.</li>
-            <li>Feathered alpha blending hides seams when registration is good; poor clicks → ghosting.</li>
-            <li>For very wide FOVs, cylindrical warps would further reduce distortions (not required here).</li>
+            <li>Feathered alpha blending hides seams when registration is good; poor clicks will still be disastrous though, so must be careful and verify correct correspondences.</li>
+            <li>For very wide FOVs, cylindrical warps would further reduce distortions and would produce nicer results.</li>
           </ul>
         </div>
       </div>
