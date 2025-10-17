@@ -346,6 +346,181 @@ Stats: {'mean': 2.228, 'median': 1.975, 'max': 3.845, 'min': 1.264}
       </div>
     </section>
 
+    <!-- =====================================================
+         PART 2 — Automatic Feature Matching & Mosaicing
+         ===================================================== -->
+    <section class="section" id="part2">
+      <div class="container">
+        <div class="prose">
+          <h2>Part 2 — Automatic Feature Matching &amp; Mosaicing</h2>
+          <p>
+            In the second half I automate the pipeline: detect interest points, apply Adaptive Non‑Maximal Suppression (ANMS),
+            extract normalized patch descriptors, match them with a two‑sided Lowe ratio test, robustly estimate
+            homographies with RANSAC, and finally build panoramas automatically.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================
+         Harris Corner Detection
+         ====================== -->
+    <section class="section" id="B1">
+      <div class="container">
+        <div class="prose">
+          <h2>Harris Corner Detection</h2>
+          <p>
+            I use a provided Harris detector (single scale), discard a small border, then run <b>ANMS</b> to keep
+            a spatially well‑distributed subset of strong corners. Below: overlays of raw Harris corners and the
+            ANMS selection for two scenes.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part2/b1_apartment_harris.png" alt="Apartment Harris corners">
+            <figcaption>Apartment — Harris corners (dense)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/b1_apartment_anms.png" alt="Apartment ANMS">
+            <figcaption>Apartment — ANMS‑selected corners</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/b1_campanile_harris.png" alt="Campanile Harris corners">
+            <figcaption>Campanile — Harris corners (dense)</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2/b1_campanile_anms.png" alt="Campanile ANMS">
+            <figcaption>Campanile — ANMS‑selected corners</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================
+         Feature Descriptor Extraction
+         ============================== -->
+    <section class="section" id="B2">
+      <div class="container">
+        <div class="prose">
+          <h2>Feature Descriptor Extraction</h2>
+          <p>
+            For each surviving keypoint, I sample a blurred <code>40×40</code> window and downsample to a
+            bias/gain‑normalized <code>8×8</code> descriptor (axis‑aligned, no rotation‑invariance).
+            Below are montages of several extracted patches per image.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part2/b2_patches_apartment.png" alt="Apartment descriptor patches">
+            <figcaption>Apartment — sample 8×8 patches (from 40×40 windows).</figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part2/b2_patches_campanile.png" alt="Campanile descriptor patches">
+            <figcaption>Campanile — sample 8×8 patches (from 40×40 windows).</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================
+         Feature Matching (B.3)
+         ====================== -->
+    <section class="section" id="B3">
+      <div class="container">
+        <div class="prose">
+          <h2>Feature Matching &amp; RANSAC</h2>
+          <p>
+            Descriptors are matched with a <em>two‑sided</em> Lowe ratio test and filtered with RANSAC
+            (symmetric transfer error). I visualize the final inliers that support the estimated homography.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part2/b3_matches_inliers_apartment.png" alt="Apartment RANSAC inliers">
+            <figcaption>Apartment — RANSAC inliers.</figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part2/b3_matches_inliers_campanile_hdr.png" alt="Campanile HDR RANSAC inliers">
+            <figcaption>Campanile (HDR) — RANSAC inliers.</figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part2/b3_matches_inliers_campanile_view2.png" alt="Campanile View2 RANSAC inliers">
+            <figcaption>Campanile (view 2) — RANSAC inliers.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================
+         Automatic Mosaics (B.4)
+         ========================== -->
+    <section class="section" id="B4">
+      <div class="container">
+        <div class="prose">
+          <h2>Automatic Mosaics</h2>
+          <p>
+            Using the estimated homographies, I warp and blend the pairs to create panoramas. For reference,
+            I place each automatic result side‑by‑side with its manual counterpart from Part 1.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/part2/auto_mosaic_apartment.png" alt="Auto Apartment mosaic">
+            <figcaption>Auto — Apartment</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/outputs/mosaic_apartment_d.png" alt="Manual Apartment mosaic">
+            <figcaption>Manual — Apartment (Part 1)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="assets/part2/auto_mosaic_campanile_view2.png" alt="Auto Campanile view2">
+            <figcaption>Auto — Campanile view 2</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part1/outputs/mosaic_campanile_view2.png" alt="Manual Campanile view2">
+            <figcaption>Manual — Campanile view 2 (Part 1)</figcaption>
+          </figure>
+
+          <figure class="span-2">
+            <img src="assets/part2/auto_mosaic_campanile_hdr.png" alt="Auto Campanile HDR (pair)">
+            <figcaption>Auto — Campanile HDR (pair).</figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part1/outputs/campanile_mosaic_123.png" alt="Manual Campanile mosaic (3 imgs)">
+            <figcaption>Manual — Campanile (3 images, Part 1)</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================
+         Challenges
+         ================= -->
+    <section class="section" id="B_challenges">
+      <div class="container">
+        <div class="prose">
+          <h2>Challenges &amp; Lessons</h2>
+          <ul>
+            <li><b>Too many corners on huge images:</b> early runs on full‑res DSLR frames produced millions of points
+              and gigabytes of memory use. Downscaling and capping raw Harris responses, followed by ANMS, fixed it.</li>
+            <li><b>Textureless sky hurts matching:</b> I cropped out the top portion of skyline images before matching to
+              avoid spurious sky matches; this stabilized RANSAC and the resulting mosaics.</li>
+          </ul>
+        </div>
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part2/b1_YIKES_campanile_205_harris.png" alt="Runaway Harris example">
+            <figcaption>Early failure case — running Harris at full DSLR resolution (way too many responses).</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer>
