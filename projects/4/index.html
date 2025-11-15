@@ -20,10 +20,10 @@
         <figure class="hero-figure">
           <!-- Replace with your favorite Lego novel view or custom object render -->
           <img src="assets/part2/lego_novel_view.gif"
-               alt="Novel view synthesis from a trained NeRF"
+               alt="Lego novel view synthesis from a trained NeRF"
                loading="eager" decoding="async">
           <figcaption>
-            Novel view synthesis from a trained NeRF: the camera orbits the scene while
+            Novel view synthesis from a trained NeRF with the Lego dataset: the camera orbits the scene while
             colors and geometry are synthesized from the learned radiance field.
           </figcaption>
         </figure>
@@ -115,13 +115,13 @@
         <div class="figure-grid">
           <!-- Replace these with your actual screenshots -->
           <figure class="span-2">
-            <img src="assets/part0/viser_cameras_1.png" alt="Viser camera frustums view 1">
+            <img src="assets/part0/cam_frustums1.png" alt="Viser camera frustums view 1">
             <figcaption>
               Camera frustums visualized in Viser (view 1). The cameras form a rough arc around the object/tag.
             </figcaption>
           </figure>
           <figure class="span-2">
-            <img src="assets/part0/viser_cameras_2.png" alt="Viser camera frustums view 2">
+            <img src="assets/part0/cam_frustums2.png" alt="Viser camera frustums view 2">
             <figcaption>
               Camera frustums visualized in Viser (view 2), showing both elevation changes and consistent intrinsics.
             </figcaption>
@@ -191,42 +191,42 @@ focal:        float
         </div>
 
         <div class="figure-grid">
-          <!-- Provided image progression -->
+          <!-- Provided image (Sibelius) progression -->
           <figure>
-            <img src="assets/part1/provided_iter_0010.png" alt="Provided image reconstruction at iter 10">
-            <figcaption>Provided image — iteration 10 (very blurred, low frequency structure only).</figcaption>
+            <img src="assets/part1/sibelius_L10_W128/recon_step_00200.png" alt="Sibelius reconstruction at iter 200">
+            <figcaption>Provided image (Sibelius) — iteration 200 (very blurred, low-frequency structure only).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/provided_iter_0100.png" alt="Provided image reconstruction at iter 100">
-            <figcaption>Provided image — iteration 100 (structure appears, colors improving).</figcaption>
+            <img src="assets/part1/sibelius_L10_W128/recon_step_00600.png" alt="Sibelius reconstruction at iter 600">
+            <figcaption>Provided image (Sibelius) — iteration 600 (structure appears, colors improving).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/provided_iter_0500.png" alt="Provided image reconstruction at iter 500">
-            <figcaption>Provided image — iteration 500 (sharper edges, textures starting to form).</figcaption>
+            <img src="assets/part1/sibelius_L10_W128/recon_step_01200.png" alt="Sibelius reconstruction at iter 1200">
+            <figcaption>Provided image (Sibelius) — iteration 1200 (sharper edges, textures starting to form).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/provided_iter_2000.png" alt="Provided image reconstruction at iter 2000">
-            <figcaption>Provided image — final reconstruction (visually close to ground truth).</figcaption>
+            <img src="assets/part1/sibelius_L10_W128/recon_final.png" alt="Sibelius final reconstruction">
+            <figcaption>Provided image (Sibelius) — final reconstruction (visually close to ground truth).</figcaption>
           </figure>
         </div>
 
         <div class="figure-grid">
-          <!-- My own image progression -->
+          <!-- My own image (Fox) progression -->
           <figure>
-            <img src="assets/part1/mine_iter_0010.png" alt="My image reconstruction at iter 10">
-            <figcaption>My image — iteration 10.</figcaption>
+            <img src="assets/part1/fox_L10_W128/recon_step_00200.png" alt="Fox reconstruction at iter 200">
+            <figcaption>My image (fox photo) — iteration 200.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/mine_iter_0100.png" alt="My image reconstruction at iter 100">
-            <figcaption>My image — iteration 100.</figcaption>
+            <img src="assets/part1/fox_L10_W128/recon_step_00600.png" alt="Fox reconstruction at iter 600">
+            <figcaption>My image (fox photo) — iteration 600.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/mine_iter_0500.png" alt="My image reconstruction at iter 500">
-            <figcaption>My image — iteration 500.</figcaption>
+            <img src="assets/part1/fox_L10_W128/recon_step_01200.png" alt="Fox reconstruction at iter 1200">
+            <figcaption>My image (fox photo) — iteration 1200.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/mine_iter_2000.png" alt="My image reconstruction at iter 2000">
-            <figcaption>My image — final reconstruction.</figcaption>
+            <img src="assets/part1/fox_L10_W128/recon_final.png" alt="Fox final reconstruction">
+            <figcaption>My image (fox photo) — final reconstruction.</figcaption>
           </figure>
         </div>
 
@@ -247,20 +247,20 @@ focal:        float
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1/grid_L4_W64.png" alt="L=4, W=64 reconstruction">
-            <figcaption>L = 4, W = 64 — very smooth, oversmoothed details.</figcaption>
+            <img src="assets/part1/sibelius_L2_W32.png" alt="L=2, W=32 reconstruction">
+            <figcaption>L = 2, W = 32 — very smooth, oversmoothed details.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/grid_L4_W256.png" alt="L=4, W=256 reconstruction">
-            <figcaption>L = 4, W = 256 — more capacity but still missing high-frequency detail.</figcaption>
+            <img src="assets/part1/sibelius_L2_W128.png" alt="L=2, W=128 reconstruction">
+            <figcaption>L = 2, W = 128 — more capacity but still missing high-frequency detail.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/grid_L10_W64.png" alt="L=10, W=64 reconstruction">
+            <img src="assets/part1/sibelius_L10_W64.png" alt="L=10, W=64 reconstruction">
             <figcaption>L = 10, W = 64 — captures more detail but limited by narrow layers.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/grid_L10_W256.png" alt="L=10, W=256 reconstruction">
-            <figcaption>L = 10, W = 256 — best reconstruction; sharpest details and textures.</figcaption>
+            <img src="assets/part1/sibelius_L10_W128.png" alt="L=10, W=128 reconstruction">
+            <figcaption>L = 10, W = 128 — best reconstruction; sharpest details and textures.</figcaption>
           </figure>
         </div>
 
@@ -275,7 +275,7 @@ focal:        float
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part1/psnr_curve.png" alt="PSNR curve for 2D neural field">
+            <img src="assets/part1/sibelius_L10_W128/psnr_curve.png" alt="PSNR curve for 2D neural field">
             <figcaption>PSNR vs iterations for the 2D neural field training.</figcaption>
           </figure>
         </div>
@@ -354,20 +354,20 @@ focal:        float
         <div class="figure-grid">
           <!-- Lego training progression -->
           <figure>
-            <img src="assets/part2/lego_val_iter_0100.png" alt="Lego validation view at iter 100">
-            <figcaption>Lego — validation view at 100 iters (very noisy, coarse structure).</figcaption>
+            <img src="assets/part2/lego_val_iter_0200.png" alt="Lego validation view at iter 200">
+            <figcaption>Lego — validation view at 200 iters (very noisy, coarse structure).</figcaption>
           </figure>
           <figure>
             <img src="assets/part2/lego_val_iter_0400.png" alt="Lego validation view at iter 400">
             <figcaption>Lego — validation view at 400 iters (shapes forming, colors stabilizing).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part2/lego_val_iter_0800.png" alt="Lego validation view at iter 800">
-            <figcaption>Lego — validation view at 800 iters (sharper, cleaner edges).</figcaption>
+            <img src="assets/part2/lego_val_iter_0600.png" alt="Lego validation view at iter 600">
+            <figcaption>Lego — validation view at 600 iters (sharper, cleaner edges).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part2/lego_val_iter_1400.png" alt="Lego validation view at iter 1400">
-            <figcaption>Lego — validation view at 1400 iters (final quality, ~23 dB PSNR).</figcaption>
+            <img src="assets/part2/lego_val_iter_1000.png" alt="Lego validation view at iter 1000">
+            <figcaption>Lego — validation view at 1000 iters (final quality, ~23 dB PSNR).</figcaption>
           </figure>
         </div>
 
@@ -381,7 +381,7 @@ focal:        float
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part2/lego_val_psnr_curve.png" alt="Lego validation PSNR curve">
+            <img src="assets/part2/lego_val_psnr.png" alt="Lego validation PSNR curve">
             <figcaption>PSNR vs iteration on the Lego validation set.</figcaption>
           </figure>
         </div>
@@ -397,7 +397,7 @@ focal:        float
         <div class="figure-grid">
           <figure class="span-2">
             <!-- You can also use <video> if you exported MP4 instead of GIF -->
-            <img src="assets/part2/lego_spherical.gif" alt="Spherical rendering of Lego NeRF">
+            <img src="assets/part2/lego_novel_view.gif" alt="Spherical rendering of Lego NeRF">
             <figcaption>
               Spherical rendering of the Lego scene using the trained NeRF and provided test cameras.
             </figcaption>
@@ -449,7 +449,7 @@ focal:        float
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part26/custom_train_loss.png" alt="Training loss curve for custom object NeRF">
+            <img src="assets/part2_6/v1/custom_train_loss.png" alt="Training loss curve for custom object NeRF">
             <figcaption>Training loss vs iteration for my custom object NeRF.</figcaption>
           </figure>
         </div>
@@ -464,20 +464,16 @@ focal:        float
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part26/custom_val_iter_0300.png" alt="Custom object validation render at iter 300">
+            <img src="assets/part2_6/v1/custom_val_iter_0300.png" alt="Custom object validation render at iter 300">
             <figcaption>Custom object — validation view at 300 iters.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part26/custom_val_iter_0600.png" alt="Custom object validation render at iter 600">
+            <img src="assets/part2_6/v1/custom_val_iter_0600.png" alt="Custom object validation render at iter 600">
             <figcaption>Custom object — validation view at 600 iters.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part26/custom_val_iter_1000.png" alt="Custom object validation render at iter 1000">
-            <figcaption>Custom object — validation view at 1000 iters.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part26/custom_val_iter_1500.png" alt="Custom object validation render at iter 1500">
-            <figcaption>Custom object — later-stage reconstruction.</figcaption>
+            <img src="assets/part2_6/v1/custom_val_iter_0900.png" alt="Custom object validation render at iter 900">
+            <figcaption>Custom object — validation view at 900 iters (later-stage reconstruction).</figcaption>
           </figure>
         </div>
 
@@ -492,10 +488,69 @@ focal:        float
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part26/custom_novel_views.gif" alt="GIF of novel views around my object">
+            <img src="assets/part2_6/v1/custom_novel_views.gif" alt="GIF of novel views around my object">
             <figcaption>
               Novel-view GIF of my captured object. The camera orbits the object while NeRF fills in
               continuous geometry and appearance.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Appendix / Failure Cases -->
+    <section class="section" id="appendix">
+      <div class="container">
+        <div class="prose">
+          <h2>Appendix — Failure Cases &amp; Debugging</h2>
+          <p>
+            Not everything worked on the first try. Below are a few of the more interesting failure
+            modes I ran into while building this project, and what they taught me about NeRFs and
+            data capture.
+          </p>
+        </div>
+
+        <div class="prose">
+          <h3>A.1 — Mis-captured Camera Poses (Bad Viser Cameras)</h3>
+          <p>
+            In my first attempt at capturing my custom object, I didn&apos;t keep my iPhone at a fixed
+            distance from the object while walking around it. As a result, the pose estimation and
+            reconstructed camera frustums looked very inconsistent, with cameras jumping in and out
+            instead of forming a smooth ring around the object.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part0/bad_viser_cameras_1.png" alt="Bad Viser camera frustums view 1">
+            <figcaption>
+              Early failed capture: camera frustums do not form a smooth orbit and distances vary a lot.
+            </figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part0/bad_viser_cameras_2.png" alt="Bad Viser camera frustums view 2">
+            <figcaption>
+              Another view of the same mis-calibrated setup. This convinced me to reshoot with a fixed
+              distance and more consistent coverage.
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
+          <h3>A.2 — Terrible v1 Custom NeRF</h3>
+          <p>
+            I initially tried to train a NeRF on this bad capture anyway. Unsurprisingly, the model
+            struggled to reconcile the inconsistent camera poses and lighting, and the resulting
+            novel-view GIF looked like a smeared cloud of colors instead of a solid object.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part2_6/v2/terrible_v1_custom.gif" alt="Failed v1 custom NeRF GIF">
+            <figcaption>
+              <code>terrible_v1_custom.gif</code> — the result of training on the mis-captured dataset.
+              This failure motivated me to redo the capture properly and led to the cleaner NeRF shown above.
             </figcaption>
           </figure>
         </div>
