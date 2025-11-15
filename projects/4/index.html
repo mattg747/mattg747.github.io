@@ -184,9 +184,9 @@ focal:        float
         <div class="prose">
           <h3>Training Progression — Provided Image vs My Own Image</h3>
           <p>
-            I trained on both the provided Flickr test image and one of my own photos. Below are snapshots
+            I trained on both the provided test image of a fox and one of my own photos - a picture of the composer Sibelius. Below are snapshots
             of the reconstruction at different training iterations as the network slowly learns both low
-            frequencies (coarse colors) and high frequencies (edges and details).
+            frequencies and high frequencies (edges and details).
           </p>
         </div>
 
@@ -194,19 +194,19 @@ focal:        float
           <!-- Provided image (Sibelius) progression -->
           <figure>
             <img src="assets/part1/sibelius_L10_W128/recon_step_00200.png" alt="Sibelius reconstruction at iter 200">
-            <figcaption>Provided image (Sibelius) — iteration 200 (very blurred, low-frequency structure only).</figcaption>
+            <figcaption>Sibelius — iteration 200 (very blurred, low-frequency structure only).</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/sibelius_L10_W128/recon_step_00600.png" alt="Sibelius reconstruction at iter 600">
-            <figcaption>Provided image (Sibelius) — iteration 600 (structure appears, colors improving).</figcaption>
+            <figcaption>Sibelius — iteration 600 (structure improves).</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/sibelius_L10_W128/recon_step_01200.png" alt="Sibelius reconstruction at iter 1200">
-            <figcaption>Provided image (Sibelius) — iteration 1200 (sharper edges, textures starting to form).</figcaption>
+            <figcaption>Sibelius — iteration 1200 (sharper edges, textures starting to form).</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/sibelius_L10_W128/recon_final.png" alt="Sibelius final reconstruction">
-            <figcaption>Provided image (Sibelius) — final reconstruction (visually close to ground truth).</figcaption>
+            <figcaption>Sibelius — final reconstruction (visually close to ground truth).</figcaption>
           </figure>
         </div>
 
@@ -214,19 +214,19 @@ focal:        float
           <!-- My own image (Fox) progression -->
           <figure>
             <img src="assets/part1/fox_L10_W128/recon_step_00200.png" alt="Fox reconstruction at iter 200">
-            <figcaption>My image (fox photo) — iteration 200.</figcaption>
+            <figcaption>Fox photo — iteration 200.</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/fox_L10_W128/recon_step_00600.png" alt="Fox reconstruction at iter 600">
-            <figcaption>My image (fox photo) — iteration 600.</figcaption>
+            <figcaption>Fox photo — iteration 600.</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/fox_L10_W128/recon_step_01200.png" alt="Fox reconstruction at iter 1200">
-            <figcaption>My image (fox photo) — iteration 1200.</figcaption>
+            <figcaption>Fox photo — iteration 1200.</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/fox_L10_W128/recon_final.png" alt="Fox final reconstruction">
-            <figcaption>My image (fox photo) — final reconstruction.</figcaption>
+            <figcaption>Fox photo — final reconstruction.</figcaption>
           </figure>
         </div>
 
@@ -236,8 +236,8 @@ focal:        float
             I swept over two hyperparameters:
           </p>
           <ul>
-            <li>Maximum PE frequency <code>L ∈ {4, 10}</code></li>
-            <li>MLP width <code>W ∈ {64, 256}</code></li>
+            <li>Maximum PE frequency <code>L ∈ {2, 10}</code></li>
+            <li>MLP width <code>W ∈ {32, 128}</code></li>
           </ul>
           <p>
             Low <code>L</code> / small <code>W</code> produce a very smooth, low-frequency reconstruction,
@@ -252,11 +252,11 @@ focal:        float
           </figure>
           <figure>
             <img src="assets/part1/sibelius_L2_W128.png" alt="L=2, W=128 reconstruction">
-            <figcaption>L = 2, W = 128 — more capacity but still missing high-frequency detail.</figcaption>
+            <figcaption>L = 2, W = 128 — more capacity of overall structure but still missing high-frequency detail.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1/sibelius_L10_W64.png" alt="L=10, W=64 reconstruction">
-            <figcaption>L = 10, W = 64 — captures more detail but limited by narrow layers.</figcaption>
+            <img src="assets/part1/sibelius_L10_W32.png" alt="L=10, W=32 reconstruction">
+            <figcaption>L = 10, W = 32 — captures more detail but limited by narrow layers.</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/sibelius_L10_W128.png" alt="L=10, W=128 reconstruction">
@@ -276,7 +276,7 @@ focal:        float
         <div class="figure-grid">
           <figure class="span-2">
             <img src="assets/part1/sibelius_L10_W128/psnr_curve.png" alt="PSNR curve for 2D neural field">
-            <figcaption>PSNR vs iterations for the 2D neural field training.</figcaption>
+            <figcaption>PSNR vs iterations for the 2D neural field training of Sibelius image, L=10 and W=128.</figcaption>
           </figure>
         </div>
       </div>
@@ -326,8 +326,7 @@ focal:        float
           <h3>Visualization of Cameras, Rays, and Samples</h3>
           <p>
             Using <code>viser</code>, I visualized the Lego training cameras (frustums), a subset
-            of sampled rays, and the 3D sample points along those rays. This helped catch coordinate
-            system bugs and verify that all rays stayed inside the camera frustum.
+            of sampled rays, and the 3D sample points along those rays. This confirmed we had a valid dataset, ready for NeRF training.
           </p>
         </div>
 
@@ -336,7 +335,7 @@ focal:        float
           <figure class="span-2">
             <img src="assets/part2/lego_cameras_rays_points.png" alt="Viser plot of Lego cameras, rays, and samples">
             <figcaption>
-              Viser visualization: black frustums are training cameras; colored lines are sample rays;
+              Viser visualization: black frustums are training cameras;
               dots show 3D sample points along the rays.
             </figcaption>
           </figure>
@@ -375,7 +374,7 @@ focal:        float
           <h3>PSNR on the Validation Set</h3>
           <p>
             I evaluated PSNR on all 10 validation views every few hundred iterations. The curve rises
-            steadily and saturates around the target PSNR from the project spec.
+            steadily and saturates around the target PSNR of 23 dB.
           </p>
         </div>
 
@@ -387,19 +386,19 @@ focal:        float
         </div>
 
         <div class="prose">
-          <h3>Spherical Rendering Video (Lego)</h3>
+          <h3>360 Degree Rendering GIF (Lego)</h3>
           <p>
-            Finally, I rendered a video by sweeping through the 60 test camera poses
-            <code>(c2ws_test)</code>, which roughly trace a spherical path around the Lego.
+            Finally, I created a GIF by sweeping through the 60 test camera poses
+            <code>(c2ws_test)</code>, which traces a nice path around the Lego model, and rendering images for each pose, then compiling them together.
           </p>
         </div>
 
         <div class="figure-grid">
           <figure class="span-2">
             <!-- You can also use <video> if you exported MP4 instead of GIF -->
-            <img src="assets/part2/lego_novel_view.gif" alt="Spherical rendering of Lego NeRF">
+            <img src="assets/part2/lego_novel_view.gif" alt="360 degree GIF rendering of Lego NeRF">
             <figcaption>
-              Spherical rendering of the Lego scene using the trained NeRF and provided test cameras.
+              360 degree GIF rendering of the Lego scene using the trained NeRF and provided test cameras.
             </figcaption>
           </figure>
         </div>
@@ -430,11 +429,11 @@ focal:        float
               by a factor (e.g. <code>RESIZE_FACTOR = 0.25</code>) and scaled the focal length and
               principal point accordingly in the intrinsics matrix.</li>
             <li><b>Near/Far planes:</b> The object and tag were much closer to the camera than the Lego
-              scene, so I used near and far values like <code>near = 0.02</code>, <code>far = 0.5</code>.</li>
-            <li><b>Sampling:</b> I experimented with <code>32–64</code> samples per ray; for my final
-              run I used a balance that fit comfortably in GPU memory while producing smooth geometry.</li>
-            <li><b>Batch size:</b> Adjusted <code>BATCH_RAYS</code> to avoid running out of memory on my
-              hardware (smaller on my laptop, larger on Colab GPU).</li>
+              scene, so I used near and far values like <code>near = 0.2</code>, <code>far = 0.5</code>.</li>
+            <li><b>Sampling:</b> I experimented with different numbers of samples per ray; for my final
+              run I used 48 samples per ray, still comfortably in GPU memory in Google Colab and producing smooth geometry.</li>
+            <li><b>Batch size:</b> 4096, reasonable on Google Colab.</li>
+            <li><b>Number of iterations:</b> 3000, felt worth it to increase PSNR.</li>
           </ul>
         </div>
 
@@ -455,6 +454,35 @@ focal:        float
         </div>
 
         <div class="prose">
+          <h3>PSNR Curves (Train vs Validation)</h3>
+          <p>
+            In addition to tracking raw MSE, I also converted the training and validation losses into PSNR.
+            The training PSNR steadily increases and slowly plateaus as the network fits the captured views,
+            while the validation PSNR is much noisier and saturates at a relatively low value. This gap highlights
+            how challenging it is for NeRF to generalize across my real-world capture, which has imperfect coverage
+            and lighting.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/part2_6/v3/custom_train_psnr.png" alt="Custom NeRF training PSNR curve">
+            <figcaption>
+              Training PSNR over 3000 iterations. PSNR rises quickly at first as the model explains coarse
+              structure, then climbs more slowly toward ~20 dB as it refines details visible in the training views.
+            </figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part2_6/v3/custom_val_psnr.png" alt="Custom NeRF validation PSNR curve">
+            <figcaption>
+              Validation PSNR sampled every few hundred iterations. The curve is much noisier and tops out
+              around 11.5 dB, reflecting limited viewpoint coverage and remaining mismatch between the learned
+              radiance field and held-out views.
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
           <h3>Intermediate Renders During Training</h3>
           <p>
             As with the Lego scene, I periodically rendered one of the validation views from my
@@ -469,15 +497,15 @@ focal:        float
           </figure>
           <figure>
             <img src="assets/part2_6/v3/custom_val_iter_0900.png" alt="Custom object validation render at iter 900">
-            <figcaption>Custom object — validation view at 900 iters (sharper silhouette, colors stabilizing).</figcaption>
+            <figcaption>Custom object — validation view at 900 iters (slightly sharper silhouette, colors stabilizing).</figcaption>
           </figure>
           <figure>
             <img src="assets/part2_6/v3/custom_val_iter_1800.png" alt="Custom object validation render at iter 1800">
-            <figcaption>Custom object — validation view at 1800 iters (more detail on the camera body).</figcaption>
+            <figcaption>Custom object — validation view at 1800 iters (slightly more detail on the camera body, you can make out the circular lens).</figcaption>
           </figure>
           <figure>
             <img src="assets/part2_6/v3/custom_val_iter_3000.png" alt="Custom object validation render at iter 3000">
-            <figcaption>Custom object — validation view at 3000 iters (final, still imperfect but clearly recognizable camera).</figcaption>
+            <figcaption>Custom object — validation view at 3000 iters (final, still imperfect but nearly recognizable camera lens).</figcaption>
           </figure>
         </div>
 
@@ -495,7 +523,7 @@ focal:        float
             <img src="assets/part2_6/v3/meh_custom.gif" alt="GIF of novel views around my object">
             <figcaption>
               Curated novel-view GIF of my captured camera. I use the subset of viewpoints that match the range
-              of angles actually covered in my photos, which produces the cleanest-looking orbit.
+              of angles actually covered in my photos, which produces the cleanest-looking orbit. Still a very blurry mess, obviously with the dataset I provided the NeRF, it struggled to train well and allow for good renders.
             </figcaption>
           </figure>
         </div>
@@ -508,7 +536,7 @@ focal:        float
         <div class="prose">
           <h2>Appendix — Failure Cases &amp; Debugging</h2>
           <p>
-            Not everything worked on the first try. Below are a few of the more interesting failure
+            Getting any decent result using my custom object was a struggle for this project. Those previous results were from a 2nd attempt. Below are a few of the more interesting failure
             modes I ran into while building this project, and what they taught me about NeRFs and
             data capture.
           </p>
@@ -545,9 +573,7 @@ focal:        float
           <p>
             I initially tried to train a NeRF on the mis-captured dataset anyway. Unsurprisingly, the model
             struggled to reconcile the inconsistent camera poses and lighting, and the resulting novel-view
-            GIFs looked like smeared clouds of colors instead of a solid object. Even after recapturing the
-            data correctly, rendering a full 360° orbit exposes viewpoints that were never actually observed,
-            which again causes the NeRF to hallucinate blurry geometry.
+            GIFs looked like smeared clouds of colors instead of a solid object.
           </p>
         </div>
 
@@ -557,23 +583,7 @@ focal:        float
             <figcaption>
               <code>terrible_v1_custom.gif</code> — training on the mis-captured dataset where camera distance
               and coverage were highly inconsistent. The NeRF cannot agree on a single 3D explanation and
-              collapses into a noisy, abstract swirl.
-            </figcaption>
-          </figure>
-          <figure class="span-2">
-            <img src="assets/part2_6/v1/custom_novel_views.gif" alt="Blurry v1 custom NeRF GIF">
-            <figcaption>
-              <code>custom_novel_views.gif</code> from the same capture — some structure is visible, but the
-              camera body is still very mushy, especially from viewpoints with poor supervision.
-            </figcaption>
-          </figure>
-          <figure class="span-2">
-            <img src="assets/part2_6/v3/full_meh_custom.gif" alt="Full orbit custom NeRF GIF including bad views">
-            <figcaption>
-              <code>full_meh_custom.gif</code> — even with the improved v3 capture, asking for a full 360° orbit
-              reveals viewpoints that were never imaged in the original photo set, leading to distorted geometry
-              on the back side of the camera. This contrasts with the cleaner, curated orbit shown in the main
-              Part 2.6 section.
+              collapses into a noisy, abstract swirl. Looks cool but it is not the desired result.
             </figcaption>
           </figure>
         </div>
