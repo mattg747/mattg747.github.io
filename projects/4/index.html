@@ -82,9 +82,9 @@
         <div class="prose">
           <h3>0.2 — 3D Object Capture with a Single ArUco Tag</h3>
           <p>
-            I chose a small object and placed it next to a printed single ArUco tag on a tabletop.
-            Again using my phone at the same zoom, I captured multi-view images by walking around the
-            object and varying both azimuth and elevation.
+            I chose my DSLR camera as my custom object and placed it next to a printed single ArUco tag on the floor in my room.
+            Again using my phone at the same zoom, I captured multi-view images by moving around the
+            object and varying both azimuth and elevation (horizontal and vertical angles).
           </p>
           <ul>
             <li>Approximately 30–50 views, with the object filling ~50% of the frame.</li>
@@ -449,7 +449,7 @@ focal:        float
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part2_6/v1/custom_train_loss.png" alt="Training loss curve for custom object NeRF">
+            <img src="assets/part2_6/v3/custom_train_loss.png" alt="Training loss curve for custom object NeRF">
             <figcaption>Training loss vs iteration for my custom object NeRF.</figcaption>
           </figure>
         </div>
@@ -464,16 +464,20 @@ focal:        float
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part2_6/v1/custom_val_iter_0300.png" alt="Custom object validation render at iter 300">
-            <figcaption>Custom object — validation view at 300 iters.</figcaption>
+            <img src="assets/part2_6/v3/custom_val_iter_0300.png" alt="Custom object validation render at iter 300">
+            <figcaption>Custom object — validation view at 300 iters (coarse structure, heavy blur).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part2_6/v1/custom_val_iter_0600.png" alt="Custom object validation render at iter 600">
-            <figcaption>Custom object — validation view at 600 iters.</figcaption>
+            <img src="assets/part2_6/v3/custom_val_iter_0900.png" alt="Custom object validation render at iter 900">
+            <figcaption>Custom object — validation view at 900 iters (sharper silhouette, colors stabilizing).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part2_6/v1/custom_val_iter_0900.png" alt="Custom object validation render at iter 900">
-            <figcaption>Custom object — validation view at 900 iters (later-stage reconstruction).</figcaption>
+            <img src="assets/part2_6/v3/custom_val_iter_1800.png" alt="Custom object validation render at iter 1800">
+            <figcaption>Custom object — validation view at 1800 iters (more detail on the camera body).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part2_6/v3/custom_val_iter_3000.png" alt="Custom object validation render at iter 3000">
+            <figcaption>Custom object — validation view at 3000 iters (final, still imperfect but clearly recognizable camera).</figcaption>
           </figure>
         </div>
 
@@ -488,10 +492,10 @@ focal:        float
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part2_6/v1/custom_novel_views.gif" alt="GIF of novel views around my object">
+            <img src="assets/part2_6/v3/meh_custom.gif" alt="GIF of novel views around my object">
             <figcaption>
-              Novel-view GIF of my captured object. The camera orbits the object while NeRF fills in
-              continuous geometry and appearance.
+              Curated novel-view GIF of my captured camera. I use the subset of viewpoints that match the range
+              of angles actually covered in my photos, which produces the cleanest-looking orbit.
             </figcaption>
           </figure>
         </div>
@@ -537,20 +541,39 @@ focal:        float
         </div>
 
         <div class="prose">
-          <h3>A.2 — Terrible v1 Custom NeRF</h3>
+          <h3>A.2 — Failed Custom NeRF Attempts</h3>
           <p>
-            I initially tried to train a NeRF on this bad capture anyway. Unsurprisingly, the model
-            struggled to reconcile the inconsistent camera poses and lighting, and the resulting
-            novel-view GIF looked like a smeared cloud of colors instead of a solid object.
+            I initially tried to train a NeRF on the mis-captured dataset anyway. Unsurprisingly, the model
+            struggled to reconcile the inconsistent camera poses and lighting, and the resulting novel-view
+            GIFs looked like smeared clouds of colors instead of a solid object. Even after recapturing the
+            data correctly, rendering a full 360° orbit exposes viewpoints that were never actually observed,
+            which again causes the NeRF to hallucinate blurry geometry.
           </p>
         </div>
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="assets/part2_6/v2/terrible_v1_custom.gif" alt="Failed v1 custom NeRF GIF">
+            <img src="assets/part2_6/v2/terrible_v1_custom.gif" alt="Severely failed v1 custom NeRF GIF">
             <figcaption>
-              <code>terrible_v1_custom.gif</code> — the result of training on the mis-captured dataset.
-              This failure motivated me to redo the capture properly and led to the cleaner NeRF shown above.
+              <code>terrible_v1_custom.gif</code> — training on the mis-captured dataset where camera distance
+              and coverage were highly inconsistent. The NeRF cannot agree on a single 3D explanation and
+              collapses into a noisy, abstract swirl.
+            </figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part2_6/v1/custom_novel_views.gif" alt="Blurry v1 custom NeRF GIF">
+            <figcaption>
+              <code>custom_novel_views.gif</code> from the same capture — some structure is visible, but the
+              camera body is still very mushy, especially from viewpoints with poor supervision.
+            </figcaption>
+          </figure>
+          <figure class="span-2">
+            <img src="assets/part2_6/v3/full_meh_custom.gif" alt="Full orbit custom NeRF GIF including bad views">
+            <figcaption>
+              <code>full_meh_custom.gif</code> — even with the improved v3 capture, asking for a full 360° orbit
+              reveals viewpoints that were never imaged in the original photo set, leading to distorted geometry
+              on the back side of the camera. This contrasts with the cleaner, curated orbit shown in the main
+              Part 2.6 section.
             </figcaption>
           </figure>
         </div>
