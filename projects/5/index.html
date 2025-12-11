@@ -42,8 +42,7 @@
             <li>Creating <b>visual anagrams</b> and <b>hybrid images</b> purely via text prompts.</li>
           </ul>
           <p>
-            All core code lives in the provided Jupyter notebook (Part A). This page summarizes my
-            results, qualitative observations, and some of my favorite generated images.
+            All core code lives in a Jupyter notebook on Google Colab. This page summarizes my results, qualitative observations, and some of my favorite generated images.
           </p>
         </div>
       </div>
@@ -55,20 +54,6 @@
     <section class="section" id="part0">
       <div class="container">
         <div class="prose">
-          <h2>Part 0 — Setup &amp; Prompt Embeddings</h2>
-          <p>
-            I used the <b>DeepFloyd IF Stage I model</b> via Hugging Face. After creating an account,
-            accepting the DeepFloyd/IF-I-XL-v1.0 license under the affiliation
-            “The University of California, Berkeley,” and generating a read-only access token,
-            I authenticated in the notebook using the Hugging Face Hub.
-          </p>
-          <p>
-            DeepFloyd is a two-stage text-to-image model. I interacted mainly with Stage I, which
-            generates <code>64×64</code> images that can optionally be upsampled by later stages.
-          </p>
-        </div>
-
-        <div class="prose">
           <h3>Prompt Embeddings on Hugging Face Clusters</h3>
           <p>
             Since the prompt encoder is large, I used the course-provided Hugging Face clusters
@@ -77,45 +62,10 @@
             <code>.pth</code> file once, and loaded it into Colab for all subsequent experiments.
           </p>
           <p>
-            I chose a mixture of realistic, whimsical, and illusion-friendly prompts:
+            I chose a mixture of realistic, interesting, and illusion-friendly prompts such as 'a high quality photo of Yosemite valley at sunrise', 
+            an oil painting of an arctic wolf in a snowy forest',
+            and 'a serene misty mountain landscape'.
           </p>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Prompt ID</th>
-                <th>Text Prompt</th>
-                <th>Intended Use</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>P1</td>
-                <td>“a high quality photo of Yosemite valley at sunrise”</td>
-                <td>Baseline “nice photo”, also used as a generic natural-image prior.</td>
-              </tr>
-              <tr>
-                <td>P2</td>
-                <td>“an oil painting of a wise wizard with a long beard”</td>
-                <td>Illusions &amp; hybrid images.</td>
-              </tr>
-              <tr>
-                <td>P3</td>
-                <td>“an action photo of a beach volleyball spike, frozen in midair”</td>
-                <td>High-frequency textures and motion.</td>
-              </tr>
-              <tr>
-                <td>P4</td>
-                <td>“a cyberpunk neon cityscape style version”</td>
-                <td>Stylized translations of existing images.</td>
-              </tr>
-              <tr>
-                <td>P5</td>
-                <td>“a watercolor painting of a ship in stormy seas”</td>
-                <td>Hybrid images with natural vs painterly frequencies.</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
 
         <div class="prose">
@@ -125,44 +75,46 @@
             reproducibility across parts:
           </p>
           <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
-random_seed = 180  # Used consistently for Parts 0–1.9
+            random_seed = 100  # Used consistently for Parts 0–1.9
           </pre>
           <p>
             For the initial prompt-exploration runs, I varied
-            <code>num_inference_steps ∈ {20, 50}</code>. With fewer steps, images
-            were more abstract and noisy; at 50 steps, the outputs were sharper but
+            <code>num_inference_steps ∈ {5, 40}</code>. With fewer steps, images
+            were more abstract and noisy; at 40 steps, the outputs were much sharper but
             took longer to generate.
           </p>
         </div>
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part0/yosemite_steps20.png"
-                 alt="Yosemite valley at sunrise with 20 inference steps">
-            <figcaption>Yosemite (P1), 20 steps — recognizable layout but slightly noisy and soft.</figcaption>
+            <img src="assets/part0/yosemite_steps5.png"
+                 alt="Yosemite valley at sunrise with 5 inference steps">
+            <figcaption>Yosemite (P1), 5 steps — recognizable but noisy and soft.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part0/yosemite_steps50.png"
-                 alt="Yosemite valley at sunrise with 50 inference steps">
-            <figcaption>Yosemite (P1), 50 steps — cleaner valley geometry and crisper clouds.</figcaption>
+            <img src="assets/part0/yosemite_steps40.png"
+                 alt="Yosemite valley at sunrise with 40 inference steps">
+            <figcaption>Yosemite (P1), 40 steps — much cleaner image with crisp detail in mountains and trees.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part0/wizard_steps20.png"
-                 alt="Wizard prompt with 20 steps">
-            <figcaption>Wizard (P2), 20 steps — painterly but with muddled facial details.</figcaption>
+            <img src="assets/part0/spiderweb_steps5.png"
+                 alt="Spiderweb with dew at 5 inference steps">
+            <figcaption>Spiderweb with dew (P2), 5 steps — very noisy/fuzzy with recognizable web but no clear dew.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part0/wizard_steps50.png"
-                 alt="Wizard prompt with 50 steps">
-            <figcaption>Wizard (P2), 50 steps — sharper beard strands and more defined lighting.</figcaption>
+            <img src="assets/part0/spiderweb_steps40.png"
+                 alt="Spiderweb with dew at 40 inference steps">
+            <figcaption>Spiderweb with dew (P2), 40 steps — image is much more defined and there is clearly dew on the web.</figcaption>
           </figure>
-          <figure class="span-2">
-            <img src="assets/part0/volleyball_steps50.png"
-                 alt="Beach volleyball spike prompt with 50 steps">
-            <figcaption>
-              Beach volleyball spike (P3), 50 steps — the model captures sand, net, and midair motion,
-              though hands and faces are still sometimes distorted as typical for generative models.
-            </figcaption>
+          <figure>
+            <img src="assets/part0/beachvolley_steps5.png"
+                 alt="Beach volleyball at 5 inference steps">
+            <figcaption>Beach volleyball (P3), 5 steps — very noisy and net is way too low, but clearly reflects the prompt.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/part0/beachvolley_steps40.png"
+                 alt="Beach volleyball at 40 inference steps">
+            <figcaption>Beach volleyball (P3), 40 steps — image is much more detailed (essentially no noise) and clearly shows a player hitting a beach volleyball, with some weird artifacts going on with the net.</figcaption>
           </figure>
         </div>
       </div>
