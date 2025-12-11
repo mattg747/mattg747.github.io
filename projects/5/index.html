@@ -151,19 +151,19 @@ def forward(im, t):
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_1/campanile_clean.png" alt="Clean Berkeley Campanile image">
+            <img src="assets/part1/campanile.png" alt="Clean Berkeley Campanile image">
             <figcaption>Clean Berkeley Campanile (t = 0).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_1/campanile_t250.png" alt="Noisy Campanile at t=250">
+            <img src="assets/part1/noisy_campanile_t250_2.png" alt="Noisy Campanile at t=250">
             <figcaption>Noisy Campanile at t = 250 — structure mostly intact, moderate grain.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_1/campanile_t500.png" alt="Noisy Campanile at t=500">
+            <img src="assets/part1/noisy_campanile_t500_2.png" alt="Noisy Campanile at t=500">
             <figcaption>Noisy Campanile at t = 500 — building still visible, but sky significantly degraded.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_1/campanile_t750.png" alt="Noisy Campanile at t=750">
+            <img src="assets/part1/noisy_campanile_t750_2.png" alt="Noisy Campanile at t=750">
             <figcaption>Noisy Campanile at t = 750 — almost pure noise, only faint silhouette remains.</figcaption>
           </figure>
         </div>
@@ -186,29 +186,29 @@ def forward(im, t):
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_2/campanile_t250_noisy.png" alt="Noisy Campanile t=250">
+            <img src="assets/part1/noisy_campanile_t250_2.png" alt="Noisy Campanile t=250">
             <figcaption>Noisy Campanile (t = 250).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_2/campanile_t250_gauss.png" alt="Gaussian blur t=250">
+            <img src="assets/part1/campanile_gaussian_t250_3.png" alt="Gaussian blur t=250">
             <figcaption>Gaussian blur result (t = 250) — mild smoothing, but still visibly noisy.</figcaption>
           </figure>
 
           <figure>
-            <img src="assets/part1_2/campanile_t500_noisy.png" alt="Noisy Campanile t=500">
+            <img src="assets/part1/noisy_campanile_t500_2.png" alt="Noisy Campanile t=500">
             <figcaption>Noisy Campanile (t = 500).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_2/campanile_t500_gauss.png" alt="Gaussian blur t=500">
+            <img src="assets/part1/campanile_gaussian_t500_3.png" alt="Gaussian blur t=500">
             <figcaption>Gaussian blur result (t = 500) — strong smoothing, edges heavily washed out.</figcaption>
           </figure>
 
           <figure>
-            <img src="assets/part1_2/campanile_t750_noisy.png" alt="Noisy Campanile t=750">
+            <img src="assets/part1/noisy_campanile_t750_2.png" alt="Noisy Campanile t=750">
             <figcaption>Noisy Campanile (t = 750).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_2/campanile_t750_gauss.png" alt="Gaussian blur t=750">
+            <img src="assets/part1/campanile_gaussian_t750_3.png" alt="Gaussian blur t=750">
             <figcaption>
               Gaussian blur result (t = 750) — image collapses into a mostly uniform blob;
               the original structure is unrecoverable.
@@ -250,25 +250,21 @@ def forward(im, t):
         <div class="figure-grid">
           <!-- t=250 -->
           <figure>
-            <img src="assets/part1_3/campanile_clean.png" alt="Original Campanile">
-            <figcaption>Clean Campanile.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_3/campanile_t250_noisy.png" alt="Noisy Campanile t=250">
+            <img src="assets/part1/noisy_campanile_t250_2.png" alt="Noisy Campanile t=250">
             <figcaption>Noisy Campanile (t = 250).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_3/campanile_t250_onestep.png" alt="One-step denoised t=250">
+            <img src="assets/part1/onestep_t250_1.png" alt="One-step denoised t=250">
             <figcaption>One-step denoised (t = 250) — surprisingly close to the original.</figcaption>
           </figure>
 
           <!-- t=500 -->
           <figure>
-            <img src="assets/part1_3/campanile_t500_noisy.png" alt="Noisy Campanile t=500">
+            <img src="assets/part1/noisy_campanile_t500_2.png" alt="Noisy Campanile t=500">
             <figcaption>Noisy Campanile (t = 500).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_3/campanile_t500_onestep.png" alt="One-step denoised t=500">
+            <img src="assets/part1/onestep_t500_1.png" alt="One-step denoised t=500">
             <figcaption>
               One-step denoised (t = 500) — recovers the tower but loses some fine edge detail.
             </figcaption>
@@ -276,11 +272,11 @@ def forward(im, t):
 
           <!-- t=750 -->
           <figure>
-            <img src="assets/part1_3/campanile_t750_noisy.png" alt="Noisy Campanile t=750">
+            <img src="assets/part1/noisy_campanile_t750_2.png" alt="Noisy Campanile t=750">
             <figcaption>Noisy Campanile (t = 750).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_3/campanile_t750_onestep.png" alt="One-step denoised t=750">
+            <img src="assets/part1/onestep_t750_1.png" alt="One-step denoised t=750">
             <figcaption>
               One-step denoised (t = 750) — the model hallucinates a plausible tower, but it deviates
               more from the original.
@@ -322,42 +318,42 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_4/campanile_i10_noisy.png" alt="Noisy Campanile i_start=10">
+            <img src="assets/1_4_iterative/noisy_campanile_t90.png" alt="Noisy Campanile i_start=10">
             <figcaption>Initial noisy image at strided_timesteps[10].</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_4/campanile_i10_step0.png" alt="Denoising step 0">
+            <img src="assets/1_4_iterative/noisy_campanile_t240.png" alt="Denoising step 0">
             <figcaption>After 5 iterations — coarse silhouette emerging.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_4/campanile_i10_step5.png" alt="Denoising step 5">
+            <img src="assets/1_4_iterative/noisy_campanile_t390.png" alt="Denoising step 5">
             <figcaption>After 10 iterations — tower edges sharpen.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_4/campanile_i10_step10.png" alt="Denoising step 10">
+            <img src="assets/1_4_iterative/noisy_campanile_t540.png" alt="Denoising step 10">
             <figcaption>After 15 iterations — sky and clock face become cleaner.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_4/campanile_i10_step15.png" alt="Denoising step 15">
+            <img src="assets/1_4_iterative/noisy_campanile_t690.png" alt="Denoising step 15">
             <figcaption>After 20 iterations — residual noise mostly gone.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_4/campanile_iterative_final.png" alt="Iteratively denoised Campanile">
+            <img src="assets/part1/iterative_final_t690_1.png" alt="Iteratively denoised Campanile">
             <figcaption>Final iteratively denoised Campanile.</figcaption>
           </figure>
         </div>
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_4/campanile_onestep.png" alt="One-step denoised Campanile">
+            <img src="assets/part1/onestep_t750_1.png" alt="One-step denoised Campanile">
             <figcaption>One-step denoised (from same starting t) — noticeably blurrier.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_4/campanile_gaussian.png" alt="Gaussian blur comparison">
+            <img src="assets/part1/campanile_gaussian_t750_3.png" alt="Gaussian blur comparison">
             <figcaption>Gaussian blur denoising — smooth but structurally poor.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_4/campanile_clean_ref.png" alt="Original Campanile reference">
+            <img src="assets/part1/campanile.png" alt="Original Campanile reference">
             <figcaption>Original Campanile for reference.</figcaption>
           </figure>
         </div>
