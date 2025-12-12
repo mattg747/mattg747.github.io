@@ -930,45 +930,37 @@ x_t = mask * x_t + (1 - mask) * x_t_original
           <h2>Part 1.8 — Visual Anagrams</h2>
           <p>
             Visual anagrams are images that look like one thing upright and another when flipped
-            upside down. I implemented a <code>visual_anagrams</code> function that at each step:
+            upside down. I implemented a <code>visual_anagrams</code> function that averages two
+            noise estimates: one from the normal image with prompt <code>P_A</code>, and one from
+            the vertically flipped image with prompt <code>P_B</code>.
           </p>
-          <ol>
-            <li>Computes a conditional noise estimate with prompt <code>P_A</code> on the normal image.</li>
-            <li>Flips the image vertically, computes a conditional noise estimate with prompt <code>P_B</code>.</li>
-            <li>Flips the second noise back and averages the two estimates before applying the DDPM update.</li>
-          </ol>
-        </div>
-
-        <div class="prose">
-          <h3>Anagram 1: “an oil painting of an old man” ↔ “people around a campfire”</h3>
-        </div>
-
-        <div class="figure-grid">
-          <figure>
-            <img src="assets/part1_8/anagram1_upright.png" alt="Anagram 1 upright">
-            <figcaption>Upright — reads as “an oil painting of an old man”.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_8/anagram1_flipped.png" alt="Anagram 1 flipped">
-            <figcaption>Flipped — faces and shadows become “people around a campfire”.</figcaption>
-          </figure>
-        </div>
-
-        <div class="prose">
-          <h3>Anagram 2: “a skull made of intricately carved stone” ↔ “a serene misty mountain landscape”</h3>
           <p>
-            For a second illusion, I used two of my earlier prompts:
+            Below are two examples. In each, the <b>left</b> is the generated image, and the <b>right</b>
+            is the same image flipped upside down.
           </p>
         </div>
 
+        <div class="prose">
+          <h3>Illusion 1: Old Man ↔ Wolf</h3>
+        </div>
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part1_8/anagram2_upright.png" alt="Anagram 2 upright skull">
-            <figcaption>Upright — a skull carved out of stone cliffs.</figcaption>
+          <figure class="span-2">
+            <img src="assets/1_8/illusion1_oldman_wolf_2.png" alt="Visual anagram illusion 1: old man and wolf">
+            <figcaption>
+              Visual anagram #1 — upright vs flipped (old man ↔ wolf).
+            </figcaption>
           </figure>
-          <figure>
-            <img src="assets/part1_8/anagram2_flipped.png" alt="Anagram 2 flipped landscape">
-            <figcaption>Flipped — reads more like a misty mountain range with a valley.</figcaption>
+        </div>
+
+        <div class="prose">
+          <h3>Illusion 2: Owl ↔ Wizard</h3>
+        </div>
+        <div class="figure-grid">
+          <figure class="span-2">
+            <img src="assets/1_8/illusion2_owl_wizard_2.png" alt="Visual anagram illusion 2: owl and wizard">
+            <figcaption>
+              Visual anagram #2 — upright vs flipped (owl ↔ wizard).
+            </figcaption>
           </figure>
         </div>
       </div>
