@@ -611,7 +611,7 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
         <div class="prose">
           <h3>Web Image (Bear)</h3>
           <p>
-            I started from a downloaded bear photo and ran the same SDEdit procedure with
+            I started with a drawing of a bear and ran the same SDEdit procedure with
             <code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>. Smaller <code>t</code> (e.g., 390) is closer to the original;
             larger <code>t</code> (e.g., 960) is more heavily edited.
           </p>
@@ -653,8 +653,7 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
           <h3>Hand-Drawn Image 1 (Car)</h3>
           <p>
             I drew a simple car and applied the same noising + denoising loop.
-            As the noise increases, the model projects the sketch onto the natural image manifold,
-            adding realistic texture, lighting, and backgrounds.
+            As the noise increases, the model projects the sketch onto the natural image manifold.
           </p>
         </div>
 
@@ -694,7 +693,6 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
           <h3>Hand-Drawn Image 2 (Tree)</h3>
           <p>
             For a second drawing, I used a simple tree sketch and ran the same set of starting indices.
-            These outputs are saved as <code>tree_i{index}.png</code>.
           </p>
         </div>
 
@@ -735,9 +733,9 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
         <div class="prose">
           <h2>Part 1.7.2 — Inpainting</h2>
           <p>
-            I implemented an <b>inpaint</b> function following the RePaint-style algorithm.
-            At each denoising step, the model updates the whole image, then I overwrite pixels
-            outside the mask with the appropriately noised original image:
+            I implemented an <b>inpaint</b> function following a RePaint-style idea. At each denoising step,
+            the model proposes an updated image, and I overwrite pixels outside the mask with the appropriately
+            noised original image:
           </p>
           <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
 x_t = mask * x_t + (1 - mask) * x_t_original
@@ -748,73 +746,54 @@ x_t = mask * x_t + (1 - mask) * x_t_original
         </div>
 
         <div class="prose">
-          <h3>Inpainting the Top of the Campanile</h3>
+          <h3>Campanile Inpainting</h3>
+          <p>
+            I inpainted the top of the Campanile. Below is the final inpainted result.
+          </p>
         </div>
 
         <div class="figure-grid">
-          <figure>
-            <img src="assets/part1_7_2/campanile_resized.png" alt="Resized Campanile">
-            <figcaption>Resized Campanile input.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_2/campanile_mask.png" alt="Campanile mask">
-            <figcaption>Binary mask over the top portion (region to replace).</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_2/campanile_hole.png" alt="Campanile with missing top">
-            <figcaption>Campanile with top removed (hole to fill).</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_2/campanile_inpaint.png" alt="Campanile inpainted top">
+          <figure class="span-2">
+            <img src="assets/1_7/1_7_2/campanile_inpaint_top.png" alt="Campanile inpainted top">
             <figcaption>
-              Inpainted Campanile — new tower top synthesized; architectural details are plausible though not
-              identical to the original.
+              Campanile inpainted — the top region is re-synthesized while the rest of the image is preserved.
             </figcaption>
           </figure>
         </div>
 
         <div class="prose">
-          <h3>Inpainting Two Additional Images</h3>
+          <h3>Two Additional Images (Mask Alignment Comparison)</h3>
           <p>
-            I also experimented with:
+            I also inpainted two additional images (Eren and Spongebob). For each image, I tried a
+            slightly misaligned mask and then a better aligned mask to compare the effect on realism and edge artifacts.
           </p>
-          <ul>
-            <li>Removing and replacing the sky in a landscape photo.</li>
-            <li>Inpainting an object out of a beach volleyball scene.</li>
-          </ul>
         </div>
 
+        <div class="prose">
+          <h4>Eren — Misaligned Mask vs Better Aligned Mask</h4>
+        </div>
         <div class="figure-grid">
-          <!-- Landscape sky inpainting -->
           <figure>
-            <img src="assets/part1_7_2/landscape_original.png" alt="Original landscape">
-            <figcaption>Original landscape.</figcaption>
+            <img src="assets/1_7/1_7_2/eren_inpaint.png" alt="Eren inpaint result (misaligned mask)">
+            <figcaption>Eren inpaint (misaligned mask).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_2/landscape_mask.png" alt="Sky mask">
-            <figcaption>Mask over the sky region.</figcaption>
+            <img src="assets/1_7/1_7_2/eren_inpaint_1.png" alt="Eren inpaint result (better aligned mask)">
+            <figcaption>Eren inpaint (better aligned mask).</figcaption>
           </figure>
-          <figure>
-            <img src="assets/part1_7_2/landscape_inpaint.png" alt="Landscape new sky">
-            <figcaption>
-              Inpainted landscape — new dramatic clouds and sunset colors inserted into the sky region.
-            </figcaption>
-          </figure>
+        </div>
 
-          <!-- Volleyball object removal -->
+        <div class="prose">
+          <h4>Spongebob — Misaligned Mask vs Better Aligned Mask</h4>
+        </div>
+        <div class="figure-grid">
           <figure>
-            <img src="assets/part1_7_2/volleyball_original.png" alt="Original volleyball">
-            <figcaption>Original volleyball photo with a distracting spectator.</figcaption>
+            <img src="assets/1_7/1_7_2/spongebob_inpaint.png" alt="Spongebob inpaint result (misaligned mask)">
+            <figcaption>Spongebob inpaint (misaligned mask).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_2/volleyball_mask.png" alt="Spectator mask">
-            <figcaption>Mask covering the spectator.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_2/volleyball_inpaint.png" alt="Volleyball inpainted">
-            <figcaption>
-              Inpainted volleyball scene — the spectator is replaced by plausible background sand/bleachers.
-            </figcaption>
+            <img src="assets/1_7/1_7_2/spongebob_inpaint_1.png" alt="Spongebob inpaint result (better aligned mask)">
+            <figcaption>Spongebob inpaint (better aligned mask).</figcaption>
           </figure>
         </div>
       </div>
