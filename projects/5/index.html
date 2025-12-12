@@ -810,62 +810,112 @@ x_t = mask * x_t + (1 - mask) * x_t_original
             I extended SDEdit to use <b>custom prompts</b> instead of the generic
             “a high quality photo”. This turns projection into text-guided
             image-to-image translation. I reused the same noise levels
-            <code>[1, 3, 5, 7, 10, 20]</code>.
+            <code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>.
           </p>
         </div>
 
         <div class="prose">
-          <h3>Campanile → “a cyberpunk neon cityscape style version”</h3>
+          <h3>Campanile → “a watercolor painting of a lighthouse on a cliff”</h3>
         </div>
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_7_3/campanile_original.png" alt="Original Campanile">
+            <img src="assets/part1/campanile.png" alt="Original Campanile">
             <figcaption>Original Campanile.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_3/campanile_cyberpunk_i1.png" alt="Campanile cyberpunk i1">
-            <figcaption>i_start=1 — mostly original, slightly more saturated lights.</figcaption>
+            <img src="assets/1_7/1_7_3/campanile_lighthouse/campanile_text_1_t990.png" alt="Campanile text-conditional edit (i_start=1, t=990)">
+            <figcaption>i_start=1 (t=990) — strongest edit.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_3/campanile_cyberpunk_i5.png" alt="Campanile cyberpunk i5">
-            <figcaption>i_start=5 — tower bathed in neon accents, darker sky.</figcaption>
+            <img src="assets/1_7/1_7_3/campanile_lighthouse/campanile_text_3_t930.png" alt="Campanile text-conditional edit (i_start=3, t=930)">
+            <figcaption>i_start=3 (t=930).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_3/campanile_cyberpunk_i20.png" alt="Campanile cyberpunk i20">
-            <figcaption>
-              i_start=20 — scene transforms into a futuristic high-rise with neon billboards.
-            </figcaption>
+            <img src="assets/1_7/1_7_3/campanile_lighthouse/campanile_text_5_t870.png" alt="Campanile text-conditional edit (i_start=5, t=870)">
+            <figcaption>i_start=5 (t=870).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/campanile_lighthouse/campanile_text_7_t810.png" alt="Campanile text-conditional edit (i_start=7, t=810)">
+            <figcaption>i_start=7 (t=810).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/campanile_lighthouse/campanile_text_10_t720.png" alt="Campanile text-conditional edit (i_start=10, t=720)">
+            <figcaption>i_start=10 (t=720).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/campanile_lighthouse/campanile_text_20_t420.png" alt="Campanile text-conditional edit (i_start=20, t=420)">
+            <figcaption>i_start=20 (t=420) — closest to the original.</figcaption>
           </figure>
         </div>
 
         <div class="prose">
-          <h3>Two Additional Test Images</h3>
-          <p>
-            I also used prompts like:
-          </p>
-          <ul>
-            <li>“a watercolor painting of a ship in stormy seas” (P5)</li>
-            <li>“a Pixar style illustration”</li>
-          </ul>
+          <h3>Eren → “a soft pastel painting of cherry blossom trees”</h3>
         </div>
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_7_3/ship_source.png" alt="Source seascape photo">
-            <figcaption>Source ocean photo.</figcaption>
+            <img src="assets/1_7/eren/eren_edit_idx32_t30.png" alt="Eren reference (closest SDEdit result)">
+            <figcaption>Reference (closest SDEdit result).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_3/ship_watercolor_i10.png" alt="Watercolor ship hybrid">
-            <figcaption>Watercolor translation — waves and ship rendered as a soft painting.</figcaption>
+            <img src="assets/1_7/1_7_3/eren_cherry_blossoms/eren_text_level1_t990.png" alt="Eren text-conditional edit (i_start=1, t=990)">
+            <figcaption>i_start=1 (t=990) — strongest edit.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_3/portrait_source.png" alt="Source portrait">
-            <figcaption>Source portrait photo.</figcaption>
+            <img src="assets/1_7/1_7_3/eren_cherry_blossoms/eren_text_level3_t930.png" alt="Eren text-conditional edit (i_start=3, t=930)">
+            <figcaption>i_start=3 (t=930).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_3/portrait_pixar_i10.png" alt="Pixar style portrait">
-            <figcaption>Pixar-style translation — facial features reinterpreted as stylized 3D animation.</figcaption>
+            <img src="assets/1_7/1_7_3/eren_cherry_blossoms/eren_text_level5_t870.png" alt="Eren text-conditional edit (i_start=5, t=870)">
+            <figcaption>i_start=5 (t=870).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/eren_cherry_blossoms/eren_text_level7_t810.png" alt="Eren text-conditional edit (i_start=7, t=810)">
+            <figcaption>i_start=7 (t=810).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/eren_cherry_blossoms/eren_text_level10_t720.png" alt="Eren text-conditional edit (i_start=10, t=720)">
+            <figcaption>i_start=10 (t=720).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/eren_cherry_blossoms/eren_text_level20_t420.png" alt="Eren text-conditional edit (i_start=20, t=420)">
+            <figcaption>i_start=20 (t=420) — closest to the reference.</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
+          <h3>Spongebob → “a golden hour field of wildflowers in impressionist style”</h3>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx32_t30.png" alt="Spongebob reference (closest SDEdit result)">
+            <figcaption>Reference (closest SDEdit result).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/spongebob_meadow/spongebob_text_level1_t990.png" alt="Spongebob text-conditional edit (i_start=1, t=990)">
+            <figcaption>i_start=1 (t=990) — strongest edit.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/spongebob_meadow/spongebob_text_level3_t930.png" alt="Spongebob text-conditional edit (i_start=3, t=930)">
+            <figcaption>i_start=3 (t=930).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/spongebob_meadow/spongebob_text_level5_t870.png" alt="Spongebob text-conditional edit (i_start=5, t=870)">
+            <figcaption>i_start=5 (t=870).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/spongebob_meadow/spongebob_text_level7_t810.png" alt="Spongebob text-conditional edit (i_start=7, t=810)">
+            <figcaption>i_start=7 (t=810).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/spongebob_meadow/spongebob_text_level10_t720.png" alt="Spongebob text-conditional edit (i_start=10, t=720)">
+            <figcaption>i_start=10 (t=720).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_3/spongebob_meadow/spongebob_text_level20_t420.png" alt="Spongebob text-conditional edit (i_start=20, t=420)">
+            <figcaption>i_start=20 (t=420) — closest to the reference.</figcaption>
           </figure>
         </div>
       </div>
