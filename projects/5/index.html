@@ -58,12 +58,12 @@
           <p>
             Since the prompt encoder is large, I used the course-provided Hugging Face clusters
             to generate <b>4096-dimensional prompt embeddings</b> for my custom prompts.
-            I generated a dictionary of prompts → embeddings, downloaded the resulting
+            I generated a dictionary of prompts to embeddings, downloaded the resulting
             <code>.pth</code> file once, and loaded it into Colab for all subsequent experiments.
           </p>
           <p>
             I chose a mixture of realistic, interesting, and illusion-friendly prompts such as 'a high quality photo of Yosemite valley at sunrise', 
-            an oil painting of an arctic wolf in a snowy forest',
+            'an oil painting of an arctic wolf in a snowy forest',
             and 'a serene misty mountain landscape'.
           </p>
         </div>
@@ -132,16 +132,7 @@
             <code>xₜ</code> at timestep <code>t</code> using:
           </p>
           <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
-x_t = sqrt(ᾱ_t) * x_0 + sqrt(1 - ᾱ_t) * ε,   ε ~ N(0, I)
-          </pre>
-          <p>
-            In code, I implemented:
-          </p>
-          <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
-def forward(im, t):
-    ᾱ_t = alphas_cumprod[t].float()
-    noise = torch.randn_like(im)
-    return torch.sqrt(ᾱ_t) * im + torch.sqrt(1 - ᾱ_t) * noise
+x_t = sqrt(ᾱ_t) * x_0 + sqrt(1 - ᾱ_t) * ε,   ε ~ N(0, 1)
           </pre>
           <p>
             Using the provided <b>Campanile</b> image resized to <code>64×64</code>, I visualized the
@@ -156,15 +147,15 @@ def forward(im, t):
           </figure>
           <figure>
             <img src="assets/part1/noisy_campanile_t250_2.png" alt="Noisy Campanile at t=250">
-            <figcaption>Noisy Campanile at t = 250 — structure mostly intact, moderate grain.</figcaption>
+            <figcaption>Noisy Campanile at t = 250 — structure mostly intact, but already significant amount of grain.</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/noisy_campanile_t500_2.png" alt="Noisy Campanile at t=500">
-            <figcaption>Noisy Campanile at t = 500 — building still visible, but sky significantly degraded.</figcaption>
+            <figcaption>Noisy Campanile at t = 500 — building still barely visible, but sky is completely degraded.</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/noisy_campanile_t750_2.png" alt="Noisy Campanile at t=750">
-            <figcaption>Noisy Campanile at t = 750 — almost pure noise, only faint silhouette remains.</figcaption>
+            <figcaption>Noisy Campanile at t = 750 — almost pure noise, only faint silhouette of the Campanile remains.</figcaption>
           </figure>
         </div>
       </div>
@@ -180,7 +171,6 @@ def forward(im, t):
           <p>
             Before leveraging the diffusion UNet, I tried to denoise the noisy Campanile images using
             only <b>Gaussian blur</b> (from <code>torchvision.transforms.functional.gaussian_blur</code>).
-            I tuned the kernel size and σ by hand for each timestep.
           </p>
         </div>
 
@@ -191,7 +181,7 @@ def forward(im, t):
           </figure>
           <figure>
             <img src="assets/part1/campanile_gaussian_t250_3.png" alt="Gaussian blur t=250">
-            <figcaption>Gaussian blur result (t = 250) — mild smoothing, but still visibly noisy.</figcaption>
+            <figcaption>Gaussian blur result (t = 250) — smoothing helps with noise significantly, but result is blurred.</figcaption>
           </figure>
 
           <figure>
@@ -210,8 +200,8 @@ def forward(im, t):
           <figure>
             <img src="assets/part1/campanile_gaussian_t750_3.png" alt="Gaussian blur t=750">
             <figcaption>
-              Gaussian blur result (t = 750) — image collapses into a mostly uniform blob;
-              the original structure is unrecoverable.
+              Gaussian blur result (t = 750) — image collapses into a mostly uniform blob of blurred noise;
+              the original structure is essentially unrecognizable.
             </figcaption>
           </figure>
         </div>
@@ -219,7 +209,7 @@ def forward(im, t):
         <div class="prose">
           <p>
             As expected, Gaussian blur reduces high-frequency noise but cannot recover lost structure.
-            At high noise levels, everything becomes smooth but semantically meaningless.
+            At high noise levels, everything becomes smooth but the content of the image is practically erased.
           </p>
         </div>
       </div>
@@ -243,7 +233,7 @@ def forward(im, t):
           <ol>
             <li>Re-noised the clean Campanile using my <code>forward</code> function.</li>
             <li>Estimated noise via the UNet.</li>
-            <li>Computed <code>x̂₀</code> using the analytical posterior mean formula.</li>
+            <li>Computed an estimate of the original image by removing this noise.</li>
           </ol>
         </div>
 
@@ -266,7 +256,7 @@ def forward(im, t):
           <figure>
             <img src="assets/part1/onestep_t500_1.png" alt="One-step denoised t=500">
             <figcaption>
-              One-step denoised (t = 500) — recovers the tower but loses some fine edge detail.
+              One-step denoised (t = 500) — recovers the structure but loses some detail and makes some errors in reconstruction (like the top of the tower).
             </figcaption>
           </figure>
 
@@ -279,7 +269,7 @@ def forward(im, t):
             <img src="assets/part1/onestep_t750_1.png" alt="One-step denoised t=750">
             <figcaption>
               One-step denoised (t = 750) — the model hallucinates a plausible tower, but it deviates
-              more from the original.
+              a lot from the original Campanile image. Very good result given how much noise was in the starting image, though.
             </figcaption>
           </figure>
         </div>
@@ -318,28 +308,24 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/1_4_iterative/noisy_campanile_t90.png" alt="Noisy Campanile i_start=10">
-            <figcaption>Initial noisy image at strided_timesteps[10].</figcaption>
+            <img src="assets/1_4_iterative/noisy_campanile_t90.png" alt="Noisy Campanile t=90">
+            <figcaption>Noisy Campanile at t=90.</figcaption>
           </figure>
           <figure>
             <img src="assets/1_4_iterative/noisy_campanile_t240.png" alt="Denoising step 0">
-            <figcaption>After 5 iterations — coarse silhouette emerging.</figcaption>
+            <figcaption>Noisy Campanile at t=240.</figcaption>
           </figure>
           <figure>
             <img src="assets/1_4_iterative/noisy_campanile_t390.png" alt="Denoising step 5">
-            <figcaption>After 10 iterations — tower edges sharpen.</figcaption>
+            <figcaption>Noisy Campanile at t=390</figcaption>
           </figure>
           <figure>
             <img src="assets/1_4_iterative/noisy_campanile_t540.png" alt="Denoising step 10">
-            <figcaption>After 15 iterations — sky and clock face become cleaner.</figcaption>
+            <figcaption>Noisy Campanile at t=540</figcaption>
           </figure>
           <figure>
             <img src="assets/1_4_iterative/noisy_campanile_t690.png" alt="Denoising step 15">
-            <figcaption>After 20 iterations — residual noise mostly gone.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1/iterative_final_t690_1.png" alt="Iteratively denoised Campanile">
-            <figcaption>Final iteratively denoised Campanile.</figcaption>
+            <figcaption>Noisy Campanile at t=690</figcaption>
           </figure>
         </div>
 
@@ -350,7 +336,7 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
           </figure>
           <figure>
             <img src="assets/part1/campanile_gaussian_t750_3.png" alt="Gaussian blur comparison">
-            <figcaption>Gaussian blur denoising — smooth but structurally poor.</figcaption>
+            <figcaption>Gaussian blur denoising — just looks like smooth noise, not able to reconstruct the Campanile when starting image has too much noise.</figcaption>
           </figure>
           <figure>
             <img src="assets/part1/campanile.png" alt="Original Campanile reference">
@@ -377,30 +363,30 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_5/sample1.png" alt="Sample 1">
-            <figcaption>Sample 1 — vaguely landscape-like scene.</figcaption>
+            <img src="assets/1_5/sample_1.png" alt="Sample 1">
+            <figcaption>Sample 1</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_5/sample2.png" alt="Sample 2">
-            <figcaption>Sample 2 — abstract structure with sky-like gradients.</figcaption>
+            <img src="assets/1_5/sample_2.png" alt="Sample 2">
+            <figcaption>Sample 2</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_5/sample3.png" alt="Sample 3">
-            <figcaption>Sample 3 — building-like shapes but inconsistent geometry.</figcaption>
+            <img src="assets/1_5/sample_3.png" alt="Sample 3">
+            <figcaption>Sample 3</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_5/sample4.png" alt="Sample 4">
-            <figcaption>Sample 4 — forest-ish textures.</figcaption>
+            <img src="assets/1_5/sample_4.png" alt="Sample 4">
+            <figcaption>Sample 4</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_5/sample5.png" alt="Sample 5">
-            <figcaption>Sample 5 — reasonable but low-res “photo” with odd artifacts.</figcaption>
+            <img src="assets/1_5/sample_5.png" alt="Sample 5">
+            <figcaption>Sample 5</figcaption>
           </figure>
         </div>
 
         <div class="prose">
           <p>
-            The images are roughly natural but often lacking coherent objects or composition.
+            The images are roughly natural but are mostly silhouettes, lacking extensive detail.
             This is where Classifier-Free Guidance helps a lot.
           </p>
         </div>
@@ -423,38 +409,38 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
 ε_cfg = ε_uncond + w * (ε_cond - ε_uncond)
           </pre>
           <p>
-            I used a CFG scale of <code>w = 7.5</code> and sampled again from pure noise for the
+            I used a CFG scale of <code>w = 7</code> and sampled again from pure noise for the
             prompt “a high quality photo”.
           </p>
         </div>
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_6/cfg_sample1.png" alt="CFG Sample 1">
-            <figcaption>CFG Sample 1 — clearer horizon and foreground separation.</figcaption>
+            <img src="assets/1_6/cfg_sample1.png" alt="CFG Sample 1">
+            <figcaption>CFG Sample 1</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_6/cfg_sample2.png" alt="CFG Sample 2">
-            <figcaption>CFG Sample 2 — building-like structures and more realistic lighting.</figcaption>
+            <img src="assets/1_6/cfg_sample2.png" alt="CFG Sample 2">
+            <figcaption>CFG Sample 2</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_6/cfg_sample3.png" alt="CFG Sample 3">
-            <figcaption>CFG Sample 3 — sharper edges, fewer amorphous blobs.</figcaption>
+            <img src="assets/1_6/cfg_sample3.png" alt="CFG Sample 3">
+            <figcaption>CFG Sample 3</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_6/cfg_sample4.png" alt="CFG Sample 4">
-            <figcaption>CFG Sample 4 — looks like a generic cityscape at sunset.</figcaption>
+            <img src="assets/1_6/cfg_sample4.png" alt="CFG Sample 4">
+            <figcaption>CFG Sample 4</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_6/cfg_sample5.png" alt="CFG Sample 5">
-            <figcaption>CFG Sample 5 — more coherent “photo” with recognizable ground/sky split.</figcaption>
+            <img src="assets/1_6/cfg_sample5.png" alt="CFG Sample 5">
+            <figcaption>CFG Sample 5</figcaption>
           </figure>
         </div>
 
         <div class="prose">
           <p>
             CFG dramatically improves image quality (sharper, more “photo-like”) at the cost of
-            diversity. Many samples resemble generic landscapes or cityscapes.
+            diversity. Many samples resemble generic landscapes or portraits.
           </p>
         </div>
       </div>
@@ -474,8 +460,8 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
           </p>
           <p>
             I used the prompt “a high quality photo” and varied the starting index
-            <code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>, which corresponds to increasingly higher noise
-            levels and therefore stronger edits.</p>
+            <code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>, which corresponds to decreasing noise
+            levels and therefore edits with results gradually closer to the original image.</p>
         </div>
 
         <div class="prose">
@@ -484,73 +470,119 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
 
         <div class="figure-grid">
           <figure>
-            <img src="assets/part1_7/campanile_original.png" alt="Original Campanile">
+            <img src="assets/part1/campanile.png" alt="Original Campanile">
             <figcaption>Original Campanile.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/campanile_i1.png" alt="Campanile i_start=1">
-            <figcaption>i_start=1 — extremely subtle denoising / sharpening.</figcaption>
+            <img src="assets/1_7/campanile_i1.png" alt="Campanile i_start=1">
+            <figcaption>i_start=1</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/campanile_i3.png" alt="Campanile i_start=3">
-            <figcaption>i_start=3 — slight texture changes in the sky and tower bricks.</figcaption>
+            <img src="assets/1_7/campanile_i3.png" alt="Campanile i_start=3">
+            <figcaption>i_start=3</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/campanile_i5.png" alt="Campanile i_start=5">
-            <figcaption>i_start=5 — tower geometry preserved, more stylized sky.</figcaption>
+            <img src="assets/1_7/campanile_i5.png" alt="Campanile i_start=5">
+            <figcaption>i_start=5</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/campanile_i7.png" alt="Campanile i_start=7">
-            <figcaption>i_start=7 — lighting on the tower shifts, background clouds re-synthesized.</figcaption>
+            <img src="assets/1_7/campanile_i7.png" alt="Campanile i_start=7">
+            <figcaption>i_start=7</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/campanile_i10.png" alt="Campanile i_start=10">
-            <figcaption>i_start=10 — increasingly “reimagined” version of the original composition.</figcaption>
+            <img src="assets/1_7/campanile_i10.png" alt="Campanile i_start=10">
+            <figcaption>i_start=10</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/campanile_i20.png" alt="Campanile i_start=20">
-            <figcaption>i_start=20 — structure still tower-like, but composition and colors diverge more.</figcaption>
+            <img src="assets/1_7/campanile_i20.png" alt="Campanile i_start=20">
+            <figcaption>i_start=20</figcaption>
           </figure>
         </div>
 
         <div class="prose">
           <h3>Two Additional Test Images</h3>
           <p>
-            I repeated the same procedure on two of my own images:
+            I repeated the same procedure on two custom images:
           </p>
           <ul>
-            <li>A beach volleyball photo.</li>
-            <li>A portrait/people photo.</li>
+            <li>A photo of Spongebob.</li>
+            <li>A photo of Eren (Attack on Titan).</li>
           </ul>
         </div>
 
+        <div class="prose">
+          <h4>Spongebob (t=30 closest → t=960 furthest)</h4>
+        </div>
         <div class="figure-grid">
-          <!-- Test image 1 -->
-          <figure class="span-2">
-            <img src="assets/part1_7/volleyball_original.png" alt="Original volleyball image">
-            <figcaption>Original beach volleyball photo.</figcaption>
+          <figure>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx32_t30.png" alt="Spongebob edit at t=30 (idx32)">
+            <figcaption>Spongebob — t=30 (idx32), closest to the original.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/volleyball_i1.png" alt="Volleyball i_start=1">
-            <figcaption>Volleyball, i_start=1 — subtle cleanup of background noise.</figcaption>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx28_t150.png" alt="Spongebob edit at t=150 (idx28)">
+            <figcaption>Spongebob — t=150 (idx28).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/volleyball_i20.png" alt="Volleyball i_start=20">
-            <figcaption>Volleyball, i_start=20 — model reinterprets the scene with stylized sand and sky.</figcaption>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx24_t270.png" alt="Spongebob edit at t=270 (idx24)">
+            <figcaption>Spongebob — t=270 (idx24).</figcaption>
           </figure>
+          <figure>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx18_t450.png" alt="Spongebob edit at t=450 (idx18)">
+            <figcaption>Spongebob — t=450 (idx18).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx12_t630.png" alt="Spongebob edit at t=630 (idx12)">
+            <figcaption>Spongebob — t=630 (idx12).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx6_t810.png" alt="Spongebob edit at t=810 (idx6)">
+            <figcaption>Spongebob — t=810 (idx6).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx3_t900.png" alt="Spongebob edit at t=900 (idx3)">
+            <figcaption>Spongebob — t=900 (idx3).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/spongebob/spongebob_edit_idx1_t960.png" alt="Spongebob edit at t=960 (idx1)">
+            <figcaption>Spongebob — t=960 (idx1), furthest from the original.</figcaption>
+          </figure>
+        </div>
 
-          <!-- Test image 2 -->
-          <figure class="span-2">
-            <img src="assets/part1_7/portrait_original.png" alt="Original portrait image">
-            <figcaption>Original portrait photo.</figcaption>
+        <div class="prose">
+          <h4>Eren (t=30 closest → t=960 furthest)</h4>
+        </div>
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/1_7/eren/eren_edit_idx32_t30.png" alt="Eren edit at t=30 (idx32)">
+            <figcaption>Eren — t=30 (idx32), closest to the original.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/portrait_i3.png" alt="Portrait i_start=3">
-            <figcaption>Portrait, i_start=3 — slightly smoother skin, gentle color shifts.</figcaption>
+            <img src="assets/1_7/eren/eren_edit_idx28_t150.png" alt="Eren edit at t=150 (idx28)">
+            <figcaption>Eren — t=150 (idx28).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7/portrait_i20.png" alt="Portrait i_start=20">
-            <figcaption>Portrait, i_start=20 — becomes more painterly and less faithful to the original.</figcaption>
+            <img src="assets/1_7/eren/eren_edit_idx24_t270.png" alt="Eren edit at t=270 (idx24)">
+            <figcaption>Eren — t=270 (idx24).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/eren/eren_edit_idx18_t450.png" alt="Eren edit at t=450 (idx18)">
+            <figcaption>Eren — t=450 (idx18).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/eren/eren_edit_idx12_t630.png" alt="Eren edit at t=630 (idx12)">
+            <figcaption>Eren — t=630 (idx12).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/eren/eren_edit_idx6_t810.png" alt="Eren edit at t=810 (idx6)">
+            <figcaption>Eren — t=810 (idx6).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/eren/eren_edit_idx3_t900.png" alt="Eren edit at t=900 (idx3)">
+            <figcaption>Eren — t=900 (idx3).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/eren/eren_edit_idx1_t960.png" alt="Eren edit at t=960 (idx1)">
+            <figcaption>Eren — t=960 (idx1), furthest from the original.</figcaption>
           </figure>
         </div>
       </div>
@@ -577,72 +609,119 @@ stage_1.scheduler.set_timesteps(timesteps=strided_timesteps)
         </div>
 
         <div class="prose">
-          <h3>Web Image (Avocado)</h3>
-        </div>
-
-        <div class="figure-grid">
-          <figure>
-            <img src="assets/part1_7_1/avocado_original.png" alt="Original avocado image">
-            <figcaption>Original web image: avocado.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_1/avocado_i1.png" alt="Avocado i_start=1">
-            <figcaption>i_start=1 — slight sharpening, still clearly the original.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_1/avocado_i3.png" alt="Avocado i_start=3">
-            <figcaption>i_start=3 — texture on the avocado skin is re-synthesized.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_1/avocado_i5.png" alt="Avocado i_start=5">
-            <figcaption>i_start=5 — lighting changes; background becomes more “studio-photo” like.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_1/avocado_i10.png" alt="Avocado i_start=10">
-            <figcaption>i_start=10 — shape preserved but rendered in a more generic “food photo” style.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_1/avocado_i20.png" alt="Avocado i_start=20">
-            <figcaption>i_start=20 — composition drifts, but it still strongly resembles an avocado photo.</figcaption>
-          </figure>
-        </div>
-
-        <div class="prose">
-          <h3>Hand-Drawn Sketches</h3>
+          <h3>Web Image (Bear)</h3>
           <p>
-            I drew two simple line-art sketches: a house and a rocket-like doodle. The diffusion model
-            tries to project them onto the natural image manifold, turning them into realistic-looking
-            photos.
+            I started from a downloaded bear photo and ran the same SDEdit procedure with
+            <code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>. Smaller <code>t</code> (e.g., 390) is closer to the original;
+            larger <code>t</code> (e.g., 960) is more heavily edited.
           </p>
         </div>
 
         <div class="figure-grid">
-          <!-- House -->
           <figure>
-            <img src="assets/part1_7_1/house_original.png" alt="Original house sketch">
-            <figcaption>Original house sketch.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_1/house_i1.png" alt="House i_start=1">
-            <figcaption>House i_start=1 — still sketchy, but with slight shading.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_7_1/house_i20.png" alt="House i_start=20">
-            <figcaption>House i_start=20 — transforms into a small cottage in a plausible landscape.</figcaption>
+            <img src="assets/1_7/1_7_1/bear/bear_original.png" alt="Original web image (bear)">
+            <figcaption>Original web image: bear.</figcaption>
           </figure>
 
-          <!-- Rocket -->
           <figure>
-            <img src="assets/part1_7_1/rocket_original.png" alt="Original rocket sketch">
-            <figcaption>Original rocket sketch.</figcaption>
+            <img src="assets/1_7/1_7_1/bear/web_edit_i20_t390.png" alt="Bear edit i_start=20 (t=390)">
+            <figcaption>i_start=20 (t=390) — closest to the original.</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_1/rocket_i3.png" alt="Rocket i_start=3">
-            <figcaption>Rocket i_start=3 — thicker, more stylized lines, slight smoke detail.</figcaption>
+            <img src="assets/1_7/1_7_1/bear/web_edit_i10_t690.png" alt="Bear edit i_start=10 (t=690)">
+            <figcaption>i_start=10 (t=690).</figcaption>
           </figure>
           <figure>
-            <img src="assets/part1_7_1/rocket_i20.png" alt="Rocket i_start=20">
-            <figcaption>Rocket i_start=20 — becomes a realistic rocket launch photo with clouds and flame.</figcaption>
+            <img src="assets/1_7/1_7_1/bear/web_edit_i7_t780.png" alt="Bear edit i_start=7 (t=780)">
+            <figcaption>i_start=7 (t=780).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/bear/web_edit_i5_t840.png" alt="Bear edit i_start=5 (t=840)">
+            <figcaption>i_start=5 (t=840).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/bear/web_edit_i3_t900.png" alt="Bear edit i_start=3 (t=900)">
+            <figcaption>i_start=3 (t=900).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/bear/web_edit_i1_t960.png" alt="Bear edit i_start=1 (t=960)">
+            <figcaption>i_start=1 (t=960) — furthest from the original.</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
+          <h3>Hand-Drawn Image 1 (Car)</h3>
+          <p>
+            I drew a simple car and applied the same noising + denoising loop.
+            As the noise increases, the model projects the sketch onto the natural image manifold,
+            adding realistic texture, lighting, and backgrounds.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/1_7/1_7_1/car/car_original.png" alt="Original hand-drawn car sketch">
+            <figcaption>Original hand-drawn sketch: car.</figcaption>
+          </figure>
+
+          <figure>
+            <img src="assets/1_7/1_7_1/car/handdrawn_edit_i20_t390.png" alt="Car edit i_start=20 (t=390)">
+            <figcaption>i_start=20 (t=390) — closest to the original sketch.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/car/handdrawn_edit_i10_t690.png" alt="Car edit i_start=10 (t=690)">
+            <figcaption>i_start=10 (t=690).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/car/handdrawn_edit_i7_t780.png" alt="Car edit i_start=7 (t=780)">
+            <figcaption>i_start=7 (t=780).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/car/handdrawn_edit_i5_t840.png" alt="Car edit i_start=5 (t=840)">
+            <figcaption>i_start=5 (t=840).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/car/handdrawn_edit_i3_t900.png" alt="Car edit i_start=3 (t=900)">
+            <figcaption>i_start=3 (t=900).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/car/handdrawn_edit_i1_t960.png" alt="Car edit i_start=1 (t=960)">
+            <figcaption>i_start=1 (t=960) — furthest from the original (most re-synthesized).</figcaption>
+          </figure>
+        </div>
+
+        <div class="prose">
+          <h3>Hand-Drawn Image 2 (Tree)</h3>
+          <p>
+            For a second drawing, I used a simple tree sketch and ran the same set of starting indices.
+            These outputs are saved as <code>tree_i{index}.png</code>.
+          </p>
+        </div>
+
+        <div class="figure-grid">
+          <figure>
+            <img src="assets/1_7/1_7_1/tree/tree_i20.png" alt="Tree edit i_start=20">
+            <figcaption>Tree — i_start=20 (closest).</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/tree/tree_i10.png" alt="Tree edit i_start=10">
+            <figcaption>Tree — i_start=10.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/tree/tree_i7.png" alt="Tree edit i_start=7">
+            <figcaption>Tree — i_start=7.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/tree/tree_i5.png" alt="Tree edit i_start=5">
+            <figcaption>Tree — i_start=5.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/tree/tree_i3.png" alt="Tree edit i_start=3">
+            <figcaption>Tree — i_start=3.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/1_7/1_7_1/tree/tree_i1.png" alt="Tree edit i_start=1">
+            <figcaption>Tree — i_start=1 (furthest).</figcaption>
           </figure>
         </div>
       </div>
