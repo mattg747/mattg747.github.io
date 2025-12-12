@@ -966,71 +966,78 @@ x_t = mask * x_t + (1 - mask) * x_t_original
     <!-- ============================================
          Part 1.9 — Hybrid Images (Factorized Diffusion)
          ============================================ -->
-    <section class="section" id="part1-9">
-      <div class="container">
-        <div class="prose">
-          <h2>Part 1.9 — Hybrid Images via Factorized Diffusion</h2>
-          <p>
-            Hybrid images combine the low frequencies of one image with the high frequencies
-            of another. Here, instead of operating on images directly, I combined
-            <b>noise estimates</b> from two prompts:
-          </p>
-          <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
-ε_low  = UNet(x_t, t, prompt=P_A)
-ε_high = UNet(x_t, t, prompt=P_B)
+<section class="section" id="part1-9">
+  <div class="container">
+    <div class="prose">
+      <h2>Part 1.9 — Hybrid Images (Factorized Diffusion)</h2>
+      <p>
+        In this part, I implemented <b>factorized diffusion</b> to create hybrid images by combining
+        low-frequency structure from one prompt with high-frequency detail from another.
+        Instead of mixing images directly, I mix the <b>predicted noise</b> from two prompts:
+      </p>
+      <pre class="code-block" style="white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:8px;overflow:auto">
+ε_low  = UNet(x_t, t, prompt=P_low)
+ε_high = UNet(x_t, t, prompt=P_high)
 
 ε_hybrid = low_pass(ε_low) + high_pass(ε_high)
-          </pre>
-          <p>
-            I used a Gaussian blur with kernel size 33 and σ=2 to obtain low-frequency noise.
-          </p>
-        </div>
+      </pre>
+      <p>
+        I used a Gaussian blur (kernel size 33, σ = 2) to extract low-frequency noise,
+        and subtracted it from the high-frequency noise estimate.
+      </p>
+    </div>
 
-        <div class="prose">
-          <h3>Hybrid 1: “a high quality photo of Yosemite valley at sunrise” + “a highly detailed ink drawing of a dragon”</h3>
-        </div>
+    <div class="prose">
+      <h3>Hybrid 1</h3>
+      <p>
+        <b>Low frequencies:</b> “a serene misty mountain landscape”<br>
+        <b>High frequencies:</b> “a skull made of intricately carved stone”
+      </p>
+    </div>
 
-        <div class="figure-grid">
-          <figure>
-            <img src="assets/part1_9/hybrid1_yosemite_low.png" alt="Hybrid1 Yosemite low freq">
-            <figcaption>Base: Yosemite valley (low frequencies).</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_9/hybrid1_dragon_high.png" alt="Hybrid1 dragon high freq">
-            <figcaption>Detail: ink dragon drawing (high frequencies).</figcaption>
-          </figure>
-          <figure class="span-2">
-            <img src="assets/part1_9/hybrid1_result.png" alt="Hybrid1 result">
-            <figcaption>
-              Hybrid result — from a distance: a sunrise over Yosemite; up close: dragon-like lines and textures
-              hidden in the rocks and trees.
-            </figcaption>
-          </figure>
-        </div>
+    <div class="figure-grid">
+      <figure class="span-2">
+        <img src="assets/1_9/hybrid1_sample1.png" alt="Hybrid 1 result sample 1">
+        <figcaption>
+          Hybrid 1 (sample 1) — from afar the image reads as a misty mountain landscape,
+          while up close skull-like stone details emerge.
+        </figcaption>
+      </figure>
+      <figure class="span-2">
+        <img src="assets/1_9/hybrid1_sample2.png" alt="Hybrid 1 result sample 2">
+        <figcaption>
+          Hybrid 1 (sample 2) — a different stochastic run with similar low-frequency
+          structure and high-frequency skull texture.
+        </figcaption>
+      </figure>
+    </div>
 
-        <div class="prose">
-          <h3>Hybrid 2: “a watercolor painting of cherry blossom trees” + “a nighttime long exposure photo”</h3>
-        </div>
+    <div class="prose">
+      <h3>Hybrid 2</h3>
+      <p>
+        <b>Low frequencies:</b> “a soft pastel painting of cherry blossom trees”<br>
+        <b>High frequencies:</b> “a highly detailed ink drawing of a dragon”
+      </p>
+    </div>
 
-        <div class="figure-grid">
-          <figure>
-            <img src="assets/part1_9/hybrid2_blossoms_low.png" alt="Hybrid2 blossoms low">
-            <figcaption>Base: watercolor cherry blossoms (low frequencies).</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/part1_9/hybrid2_longexposure_high.png" alt="Hybrid2 long exposure high">
-            <figcaption>Detail: long-exposure city lights (high frequencies).</figcaption>
-          </figure>
-          <figure class="span-2">
-            <img src="assets/part1_9/hybrid2_result.png" alt="Hybrid2 result">
-            <figcaption>
-              Hybrid result — appears as pastel blossoms; at closer inspection, the branches
-              and petals hide streaks of light reminiscent of long-exposure traffic photos.
-            </figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
+    <div class="figure-grid">
+      <figure class="span-2">
+        <img src="assets/1_9/hybrid2_sample1.png" alt="Hybrid 2 result sample 1">
+        <figcaption>
+          Hybrid 2 (sample 1) — pastel cherry blossom colors dominate at a distance,
+          while dragon-like ink lines become visible when viewed closely.
+        </figcaption>
+      </figure>
+      <figure class="span-2">
+        <img src="assets/1_9/hybrid2_sample2.png" alt="Hybrid 2 result sample 2">
+        <figcaption>
+          Hybrid 2 (sample 2) — another run showing consistent frequency separation
+          between blossoms and dragon details.
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
 
     <!-- Wrap-up -->
     <section class="section" id="takeaways">
