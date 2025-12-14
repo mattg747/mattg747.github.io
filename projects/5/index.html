@@ -1064,7 +1064,7 @@ x_t = mask * x_t + (1 - mask) * x_t_original
           <h2>Part B 1.2 — Visualizing the Noising Process</h2>
           <p>
             I visualized the forward noising process on normalized MNIST digits for increasing noise
-            levels <code>\sigma</code>. As <code>\sigma</code> increases, digit structure becomes progressively
+            levels <code>sigma</code>. As <code>sigma</code> increases, digit structure becomes progressively
             harder to recover.
           </p>
         </div>
@@ -1073,7 +1073,7 @@ x_t = mask * x_t + (1 - mask) * x_t_original
           <figure class="span-2">
             <img src="partb_assets/1_2.png" alt="MNIST noising process visualization">
             <figcaption>
-              Noising process visualization for increasing \(\sigma\).
+              Noising process visualization for increasing sigma.
             </figcaption>
           </figure>
         </div>
@@ -1088,7 +1088,7 @@ x_t = mask * x_t + (1 - mask) * x_t_original
         <div class="prose">
           <h2>Part B 1.2.1 — Training a One-Step Denoiser</h2>
           <p>
-            I trained an unconditional UNet denoiser on MNIST with random \(\sigma\) per batch
+            I trained an unconditional UNet denoiser on MNIST with random sigma per batch
             (generated on-the-fly) using an MSE reconstruction loss.
           </p>
         </div>
@@ -1100,11 +1100,11 @@ x_t = mask * x_t + (1 - mask) * x_t_original
           </figure>
           <figure>
             <img src="partb_assets/1_2_1_epoch1.png" alt="One-step denoiser results after epoch 1">
-            <figcaption>Sample denoising results after epoch 1 (noise level \(\sigma = 0.5\)).</figcaption>
+            <figcaption>Sample denoising results after epoch 1 (noise level sigma = 0.5).</figcaption>
           </figure>
           <figure>
             <img src="partb_assets/1_2_1_epoch5.png" alt="One-step denoiser results after epoch 5">
-            <figcaption>Sample denoising results after epoch 5 (noise level \(\sigma = 0.5\)).</figcaption>
+            <figcaption>Sample denoising results after epoch 5 (noise level sigma = 0.5).</figcaption>
           </figure>
         </div>
       </div>
@@ -1118,39 +1118,39 @@ x_t = mask * x_t + (1 - mask) * x_t_original
         <div class="prose">
           <h2>Part B 1.2.2 — Out-of-Distribution Testing</h2>
           <p>
-            After training on random \(\sigma\), I evaluated the denoiser on fixed noise levels
-            (keeping the same underlying digit while varying \(\sigma\)).
+            After training on random sigma, I evaluated the denoiser on fixed noise levels
+            (keeping the same underlying digit while varying sigma).
           </p>
         </div>
 
         <div class="figure-grid">
           <figure>
             <img src="partb_assets/1_2_2/sig0_0.png" alt="OOD denoising at sigma 0.0">
-            <figcaption>\(\sigma = 0.0\)</figcaption>
+            <figcaption>sigma = 0.0</figcaption>
           </figure>
           <figure>
             <img src="partb_assets/1_2_2/sig0_2.png" alt="OOD denoising at sigma 0.2">
-            <figcaption>\(\sigma = 0.2\)</figcaption>
+            <figcaption>sigma = 0.2</figcaption>
           </figure>
           <figure>
             <img src="partb_assets/1_2_2/sig0_4.png" alt="OOD denoising at sigma 0.4">
-            <figcaption>\(\sigma = 0.4\)</figcaption>
+            <figcaption>sigma = 0.4</figcaption>
           </figure>
           <figure>
             <img src="partb_assets/1_2_2/sig0_5.png" alt="OOD denoising at sigma 0.5">
-            <figcaption>\(\sigma = 0.5\)</figcaption>
+            <figcaption>sigma = 0.5</figcaption>
           </figure>
           <figure>
             <img src="partb_assets/1_2_2/sig0_6.png" alt="OOD denoising at sigma 0.6">
-            <figcaption>\(\sigma = 0.6\)</figcaption>
+            <figcaption>sigma = 0.6</figcaption>
           </figure>
           <figure>
             <img src="partb_assets/1_2_2/sig0_8.png" alt="OOD denoising at sigma 0.8">
-            <figcaption>\(\sigma = 0.8\)</figcaption>
+            <figcaption>sigma = 0.8</figcaption>
           </figure>
           <figure>
             <img src="partb_assets/1_2_2/sig1_0.png" alt="OOD denoising at sigma 1.0">
-            <figcaption>\(\sigma = 1.0\)</figcaption>
+            <figcaption>sigma = 1.0</figcaption>
           </figure>
         </div>
       </div>
@@ -1165,7 +1165,7 @@ x_t = mask * x_t + (1 - mask) * x_t_original
           <h2>Part B 1.2.3 — Denoising Pure Noise</h2>
           <p>
             To turn denoising into a generative task, I trained the same UNet to map pure Gaussian
-            noise \(x\sim\mathcal{N}(0,1)\) directly to a clean digit. Below are the training curve and
+            noise <code>x ~ N(0, 1)</code> directly to a clean digit. Below are the training curve and
             sample outputs after epochs 1 and 5.
           </p>
         </div>
@@ -1204,8 +1204,9 @@ x_t = mask * x_t + (1 - mask) * x_t_original
         <div class="prose">
           <h2>Part B 2.2 — Training a Time-Conditioned Flow Matching UNet</h2>
           <p>
-            I added time conditioning \(t\in[0,1]\) using FCBlocks and trained the UNet to predict the
-            flow field from \(x_t\) to \(x_1\) (clean data). The plot below shows the training loss over time.
+            I added time conditioning <code>t ∈ [0, 1]</code> using FCBlocks and trained the UNet to predict the
+            flow field from <code>x_t</code> to <code>x_1</code> (clean data).
+            The plot below shows the training loss over time.
           </p>
         </div>
 
@@ -1226,15 +1227,15 @@ x_t = mask * x_t + (1 - mask) * x_t_original
         <div class="prose">
           <h2>Part B 2.3 — Sampling from the Time-Conditioned UNet</h2>
           <p>
-            I sampled by iteratively updating \(x_t\) using the predicted flow. Below are qualitative
-            samples after training for 1, 5, and 10 epochs.
+            I sampled by iteratively updating <code>x_t</code> using the predicted flow. Below are qualitative
+            samples after training for 10 epochs.
           </p>
         </div>
 
         <div class="figure-grid">
           <figure class="span-2">
-            <img src="partb_assets/2_3.png" alt="Sampling results from time-conditioned UNet at epochs 1, 5, and 10">
-            <figcaption>Time-conditioned sampling results at epochs 1, 5, and 10.</figcaption>
+            <img src="partb_assets/2_3.png" alt="Sampling results from time-conditioned UNet after 10 epochs">
+            <figcaption>Time-conditioned sampling results after 10 epochs.</figcaption>
           </figure>
         </div>
       </div>
